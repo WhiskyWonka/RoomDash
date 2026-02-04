@@ -1,9 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import type { Tenant } from "@/types/tenant";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/field";
+
+const tenantSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255),
+  domain: z
+    .string()
+    .min(1, "Domain is required")
+    .max(255)
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+});
+
+type TenantFormValues = z.infer<typeof tenantSchema>;
 
 interface Props {
   open: boolean;
@@ -13,19 +27,22 @@ interface Props {
 }
 
 export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
-  const [name, setName] = useState("");
-  const [domain, setDomain] = useState("");
+  const form = useForm<TenantFormValues>({
+    resolver: zodResolver(tenantSchema),
+    defaultValues: { name: "", domain: "" },
+  });
 
   useEffect(() => {
     if (open) {
-      setName(tenant?.name ?? "");
-      setDomain(tenant?.domain ?? "");
+      form.reset({
+        name: tenant?.name ?? "",
+        domain: tenant?.domain ?? "",
+      });
     }
-  }, [open, tenant]);
+  }, [open, tenant, form]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(name, domain);
+  const handleSubmit = (values: TenantFormValues) => {
+    onSubmit(values.name, values.domain);
   };
 
   return (
@@ -37,15 +54,35 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
             {tenant ? "Update the tenant details below." : "Fill in the details to create a new tenant."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="domain">Domain</Label>
-            <Input id="domain" value={domain} onChange={(e) => setDomain(e.target.value)} required />
-          </div>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldContent>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+                  <Input id="name" placeholder="My Tenant" {...field} aria-invalid={fieldState.invalid} />
+                  <FieldDescription>The display name for this tenant.</FieldDescription>
+                  {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                </FieldContent>
+              </Field>
+            )}
+          />
+          <Controller
+            name="domain"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldContent>
+                  <FieldLabel htmlFor="domain">Domain</FieldLabel>
+                  <Input id="domain" placeholder="my-tenant" {...field} aria-invalid={fieldState.invalid} />
+                  <FieldDescription>The subdomain used to access this tenant.</FieldDescription>
+                  {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                </FieldContent>
+              </Field>
+            )}
+          />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">{tenant ? "Save" : "Create"}</Button>
