@@ -1,6 +1,6 @@
 import type { Tenant } from "@/types/tenant";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/shadcn/dialog";
-import { Button } from "@/components/ui/shadcn/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
+import { Button } from "@/components/ui/8bit/button";
 
 interface Props {
   open: boolean;

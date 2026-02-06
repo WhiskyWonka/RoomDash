@@ -3,10 +3,12 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Tenant } from "@/types/tenant";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/shadcn/dialog";
-import { Button } from "@/components/ui/shadcn/button";
-import { Input } from "@/components/ui/shadcn/input";
+import { DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
+import { Button } from "@/components/ui/8bit/button";
+import { Input } from "@/components/ui/8bit/input";
 import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/shadcn/field";
+
+import { Dialog } from "@/components/ui/8bit/dialog"
 
 const tenantSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -42,6 +44,7 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
   }, [open, tenant, form]);
 
   const handleSubmit = (values: TenantFormValues) => {
+    console.log("VALORES_FORMULARIO:", values);
     onSubmit(values.name, values.domain);
   };
 
@@ -49,8 +52,8 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{tenant ? "Edit Tenant" : "Create Tenant"}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="mb-8">{tenant ? "Edit Tenant" : "Create Tenant"}</DialogTitle>
+          <DialogDescription className="text-xs">
             {tenant ? "Update the tenant details below." : "Fill in the details to create a new tenant."}
           </DialogDescription>
         </DialogHeader>
@@ -83,7 +86,7 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
               </Field>
             )}
           />
-          <DialogFooter>
+          <DialogFooter className="gap-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">{tenant ? "Save" : "Create"}</Button>
           </DialogFooter>

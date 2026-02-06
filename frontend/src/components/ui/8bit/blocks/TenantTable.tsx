@@ -1,6 +1,6 @@
 import type { Tenant } from "@/types/tenant";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/shadcn/table";
-import { Button } from "@/components/ui/shadcn/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/8bit/table";
+import { Button } from "@/components/ui/8bit/button";
 
 interface Props {
   tenants: Tenant[];
@@ -29,7 +29,7 @@ export function TenantTable({ tenants, onEdit, onDelete }: Props) {
             <TableCell className="font-medium">{t.name}</TableCell>
             <TableCell>{t.domain}</TableCell>
             <TableCell>{new Date(t.createdAt).toLocaleDateString()}</TableCell>
-            <TableCell className="text-right space-x-2">
+            <TableCell className="flex justify-end gap-4">
               <Button variant="outline" size="sm" onClick={() => onEdit(t)}>Edit</Button>
               <Button variant="destructive" size="sm" onClick={() => onDelete(t)}>Delete</Button>
             </TableCell>
