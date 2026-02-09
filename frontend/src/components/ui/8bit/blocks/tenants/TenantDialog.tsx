@@ -44,7 +44,6 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
   }, [open, tenant, form]);
 
   const handleSubmit = (values: TenantFormValues) => {
-    console.log("VALORES_FORMULARIO:", values);
     onSubmit(values.name, values.domain);
   };
 

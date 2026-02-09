@@ -2,56 +2,58 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { Tenant } from "@/types/tenant";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/shadcn/dialog";
-import { Button } from "@/components/ui/shadcn/button";
-import { Input } from "@/components/ui/shadcn/input";
+import type { User } from "@/types/user";
+import { DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
+import { Button } from "@/components/ui/8bit/button";
+import { Input } from "@/components/ui/8bit/input";
 import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/shadcn/field";
 
-const tenantSchema = z.object({
+import { Dialog } from "@/components/ui/8bit/dialog"
+
+const userSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
-  domain: z
+  email: z
     .string()
-    .min(1, "Domain is required")
+    .min(1, "Email is required")
     .max(255)
-    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+    .email("Invalid email address")
 });
 
-type TenantFormValues = z.infer<typeof tenantSchema>;
+type UserFormValues = z.infer<typeof userSchema>;
 
 interface Props {
   open: boolean;
-  tenant: Tenant | null;
+  user: User | null;
   onClose: () => void;
-  onSubmit: (name: string, domain: string) => void;
+  onSubmit: (name: string, email: string) => void;
 }
 
-export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
-  const form = useForm<TenantFormValues>({
-    resolver: zodResolver(tenantSchema),
-    defaultValues: { name: "", domain: "" },
+export function UserDialog({ open, user, onClose, onSubmit }: Props) {
+  const form = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: { name: "", email: "" },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        name: tenant?.name ?? "",
-        domain: tenant?.domain ?? "",
+        name: user?.name ?? "",
+        email: user?.email ?? "",
       });
     }
-  }, [open, tenant, form]);
+  }, [open, user, form]);
 
-  const handleSubmit = (values: TenantFormValues) => {
-    onSubmit(values.name, values.domain);
+  const handleSubmit = (values: UserFormValues) => {
+    onSubmit(values.name, values.email);
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{tenant ? "Edit Tenant" : "Create Tenant"}</DialogTitle>
-          <DialogDescription>
-            {tenant ? "Update the tenant details below." : "Fill in the details to create a new tenant."}
+          <DialogTitle className="mb-8">{user ? "Edit User" : "Create User"}</DialogTitle>
+          <DialogDescription className="text-xs">
+            {user ? "Update the user details below." : "Fill in the details to create a new user."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
@@ -62,30 +64,30 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
               <Field data-invalid={fieldState.invalid || undefined}>
                 <FieldContent>
                   <FieldLabel htmlFor="name">Name</FieldLabel>
-                  <Input id="name" placeholder="My Tenant" {...field} aria-invalid={fieldState.invalid} />
-                  <FieldDescription>The display name for this tenant.</FieldDescription>
+                  <Input id="name" placeholder="My User" {...field} aria-invalid={fieldState.invalid} />
+                  <FieldDescription>The display name for this user.</FieldDescription>
                   {fieldState.error && <FieldError errors={[fieldState.error]} />}
                 </FieldContent>
               </Field>
             )}
           />
           <Controller
-            name="domain"
+            name="email"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid || undefined}>
                 <FieldContent>
-                  <FieldLabel htmlFor="domain">Domain</FieldLabel>
-                  <Input id="domain" placeholder="my-tenant" {...field} aria-invalid={fieldState.invalid} />
-                  <FieldDescription>The subdomain used to access this tenant.</FieldDescription>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input id="email" placeholder="my-user@roomdash.com" {...field} aria-invalid={fieldState.invalid} />
+                  <FieldDescription>The email used to contact this user.</FieldDescription>
                   {fieldState.error && <FieldError errors={[fieldState.error]} />}
                 </FieldContent>
               </Field>
             )}
           />
-          <DialogFooter>
+          <DialogFooter className="gap-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{tenant ? "Save" : "Create"}</Button>
+            <Button type="submit">{user ? "Save" : "Create"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './app.css'
-//import App from './App'
-import SuperAdminApp from './apps/superAdmin/SuperAdminApp'
+import './styles/app.css'
+
+import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SuperAdminApp />
+    <App />
   </StrictMode>,
 )

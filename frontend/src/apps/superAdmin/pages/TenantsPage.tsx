@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Tenant } from "@/types/tenant";
 import { tenantsApi } from "@/lib/api";
-import { TenantTable } from "@/components/ui/8bit/blocks/TenantTable";
-import { TenantDialog } from "@/components/ui/8bit/blocks/TenantDialog";
-import { DeleteTenantDialog } from "@/components/ui/8bit/blocks/DeleteTenantDialog";
+import { TenantTable } from "@/components/ui/8bit/blocks/tenants/TenantTable";
+import { TenantDialog } from "@/components/ui/8bit/blocks/tenants/TenantDialog";
+import { DeleteTenantDialog } from "@/components/ui/8bit/blocks/tenants/DeleteTenantDialog";
 import { Button } from "@/components/ui/8bit/button";
+import { SectionHeader } from "@/components/ui/8bit/blocks/SectionHeader";
 
 export default function TenantsPage() {
 
@@ -36,7 +37,6 @@ export default function TenantsPage() {
     };
 
     const handleSubmit = async (name: string, domain: string) => {
-        console.log("DATA_CHECK:", { name, domain });
         try {
             if (editing) {
                 await tenantsApi.update(editing.id, { name, domain });
@@ -60,20 +60,7 @@ export default function TenantsPage() {
 
     return (
         <div className="">
-            {/* Encabezado de la página dentro del main */}
-            <div className="flex items-center justify-between mb-8 border-b-2 border-dashed border-[#004400] pb-4">
-                <div>
-                    <p className="text-xs mt-1 text-green-500">{">"} ACCESSING_RECORDS... OK</p>
-                </div>
-
-                <Button
-                    variant="outline"
-                    onClick={handleCreate}
-                    className="retro border-2"
-                >
-                    [+] ADD_NEW_TENANT
-                </Button>
-            </div>
+            <SectionHeader action={<Button variant="outline" onClick={handleCreate}>[+] ADD_NEW_TENANT</Button>} />
 
             <div className="">
                 <TenantTable

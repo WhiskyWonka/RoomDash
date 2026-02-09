@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, UserStar } from "lucide-react";
+import { Calendar, Home, Inbox, Search, Settings, User, UserStar, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom"
 
 import {
@@ -18,7 +18,7 @@ import "@/components/ui/8bit/styles/retro.css";
 const items = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "dashboard",
     icon: Home,
   },
   /*{
@@ -33,12 +33,22 @@ const items = [
   },*/
   {
     title: "Tenants",
-    url: "/tenants",
+    url: "tenants",
     icon: UserStar,
   },
   {
+    title: "Users",
+    url: "users",
+    icon: User,
+  },
+  {
+    title: "Features",
+    url: "features",
+    icon: Sparkles,
+  },
+  {
     title: "Settings",
-    url: "/settings",
+    url: "settings",
     icon: Settings,
   },
 ];

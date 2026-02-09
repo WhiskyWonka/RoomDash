@@ -1,22 +1,22 @@
-import type { Tenant } from "@/types/tenant";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/shadcn/dialog";
-import { Button } from "@/components/ui/shadcn/button";
+import type { User } from "@/types/user";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
+import { Button } from "@/components/ui/8bit/button";
 
 interface Props {
   open: boolean;
-  tenant: Tenant | null;
+  user: User | null;
   onClose: () => void;
   onConfirm: () => void;
 }
 
-export function DeleteTenantDialog({ open, tenant, onClose, onConfirm }: Props) {
+export function DeleteUserDialog({ open, user, onClose, onConfirm }: Props) {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Tenant</DialogTitle>
+          <DialogTitle>Delete User</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete <strong>{tenant?.name}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{user?.name}</strong>? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
