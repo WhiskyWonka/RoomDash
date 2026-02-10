@@ -53,6 +53,85 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'status', type: 'string', example: 'ok'),
     ]
 )]
+#[OA\Schema(
+    schema: 'AdminUser',
+    type: 'object',
+    required: ['id', 'email', 'twoFactorEnabled', 'createdAt'],
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@roomdash.local'),
+        new OA\Property(property: 'twoFactorEnabled', type: 'boolean', example: true),
+        new OA\Property(property: 'twoFactorConfirmedAt', type: 'string', format: 'date-time', nullable: true, example: '2025-02-02T22:49:00+00:00'),
+        new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2025-02-02T22:49:00+00:00'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'LoginRequest',
+    type: 'object',
+    required: ['email', 'password'],
+    properties: [
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@roomdash.local'),
+        new OA\Property(property: 'password', type: 'string', example: 'password'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'LoginResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'user', ref: '#/components/schemas/AdminUser'),
+        new OA\Property(property: 'twoFactorEnabled', type: 'boolean', example: true),
+        new OA\Property(property: 'requiresTwoFactorSetup', type: 'boolean', example: false),
+    ]
+)]
+#[OA\Schema(
+    schema: 'Verify2faRequest',
+    type: 'object',
+    required: ['code'],
+    properties: [
+        new OA\Property(property: 'code', type: 'string', minLength: 6, maxLength: 6, example: '123456'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'Verify2faResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'user', ref: '#/components/schemas/AdminUser'),
+        new OA\Property(property: 'verified', type: 'boolean', example: true),
+    ]
+)]
+#[OA\Schema(
+    schema: 'TwoFactorSetupResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'secret', type: 'string', example: 'JBSWY3DPEHPK3PXP'),
+        new OA\Property(property: 'qrCode', type: 'string', format: 'uri', example: 'data:image/svg+xml;base64,...'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'TwoFactorConfirmResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'recoveryCodes', type: 'array', items: new OA\Items(type: 'string', example: 'ABCD-EFGH')),
+        new OA\Property(property: 'enabled', type: 'boolean', example: true),
+    ]
+)]
+#[OA\Schema(
+    schema: 'TwoFactorStatusResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'enabled', type: 'boolean', example: true),
+        new OA\Property(property: 'confirmedAt', type: 'string', format: 'date-time', nullable: true, example: '2025-02-02T22:49:00+00:00'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'MeResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'user', ref: '#/components/schemas/AdminUser'),
+        new OA\Property(property: 'twoFactorVerified', type: 'boolean', example: true),
+        new OA\Property(property: 'twoFactorPending', type: 'boolean', example: false),
+    ]
+)]
 abstract class Controller
 {
     //
