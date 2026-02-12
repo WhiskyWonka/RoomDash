@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
+use App\Http\Controllers\Api\Auth\VerifyEmailController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\RootUserController;
 use App\Http\Controllers\Api\TenantController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +17,11 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
         // Public auth routes with rate limiting
         Route::middleware(['web', 'throttle:login'])->group(function () {
             Route::post('/auth/login', [LoginController::class, 'login']);
+        });
+
+        // Public email verification route (throttled)
+        Route::middleware(['web', 'throttle:login'])->group(function () {
+            Route::post('/auth/verify-email', VerifyEmailController::class);
         });
 
         // Authenticated routes (no 2FA required yet)
@@ -35,6 +43,33 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
         // Protected routes (requires 2FA verification)
         Route::middleware(['web', 'require.2fa'])->group(function () {
             Route::apiResource('tenants', TenantController::class);
+
+            // Root User CRUD
+            Route::get('/root-users', [RootUserController::class, 'index']);
+            Route::get('/root-users/{id}', [RootUserController::class, 'show']);
+            Route::post('/root-users', [RootUserController::class, 'store']);
+            Route::put('/root-users/{id}', [RootUserController::class, 'update']);
+            Route::delete('/root-users/{id}', [RootUserController::class, 'destroy']);
+
+            // Root User Activation / Deactivation
+            Route::patch('/root-users/{id}/deactivate', [RootUserController::class, 'deactivate']);
+            Route::patch('/root-users/{id}/activate', [RootUserController::class, 'activate']);
+
+            // Root User Resend Verification
+            Route::post('/root-users/{id}/resend-verification', [RootUserController::class, 'resendVerification']);
+
+            // Root User Avatar
+            Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar']);
+            Route::delete('/root-users/{id}/avatar', [RootUserController::class, 'deleteAvatar']);
+
+            // Audit Logs (read-only)
+            Route::get('/audit-logs', [AuditLogController::class, 'index']);
+            Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
+
+            // Audit logs are immutable - return 405 for modification attempts
+            Route::match(['put', 'patch', 'delete'], '/audit-logs/{id}', function () {
+                return response()->json(['message' => 'Method not allowed'], 405);
+            });
         });
     });
 }

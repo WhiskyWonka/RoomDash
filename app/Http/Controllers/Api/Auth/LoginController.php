@@ -5,24 +5,30 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use Domain\Auth\Ports\AdminUserRepositoryInterface;
+use DateTimeImmutable;
+use Domain\AuditLog\Entities\AuditLog;
+use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Infrastructure\Auth\Models\RootUser;
 use OpenApi\Attributes as OA;
 
 class LoginController extends Controller
 {
     public function __construct(
-        private readonly AdminUserRepositoryInterface $users,
+        private readonly RootUserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
+        private readonly AuditLogRepositoryInterface $auditLogRepository,
     ) {}
 
     #[OA\Post(
         path: '/auth/login',
         summary: 'Login with email and password',
-        description: 'Authenticates an admin user and initiates 2FA flow',
+        description: 'Authenticates a root user and initiates 2FA flow',
         operationId: 'login',
         tags: ['Authentication'],
         requestBody: new OA\RequestBody(
@@ -54,11 +60,31 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = $this->users->verifyPassword($data['email'], $data['password']);
+        // Check if user exists with this email before verifying password
+        // We need the Eloquent model to check is_active and email_verified_at
+        $model = RootUser::where('email', $data['email'])->first();
 
-        if (! $user) {
+        if (! $model || ! $model->password || ! \Illuminate\Support\Facades\Hash::check($data['password'], $model->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
+
+        // Check if email is verified (BR-009)
+        if ($model->email_verified_at === null) {
+            return response()->json([
+                'message' => 'Email not verified',
+                'code' => 'EMAIL_NOT_VERIFIED',
+            ], 403);
+        }
+
+        // Check if account is active (BR-008)
+        if (! $model->is_active) {
+            return response()->json([
+                'message' => 'Account deactivated',
+                'code' => 'ACCOUNT_DEACTIVATED',
+            ], 403);
+        }
+
+        $user = $model->toEntity();
 
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($user->id);
@@ -120,6 +146,20 @@ class LoginController extends Controller
         $request->session()->put('2fa_verified', true);
 
         $user = $this->users->findById($userId);
+
+        // Record audit log for successful login after 2FA
+        $this->auditLogRepository->create(new AuditLog(
+            id: Str::uuid()->toString(),
+            userId: $userId,
+            action: 'auth.login',
+            entityType: null,
+            entityId: null,
+            oldValues: null,
+            newValues: null,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+            createdAt: new DateTimeImmutable(),
+        ));
 
         return response()->json([
             'user' => $user,
@@ -201,6 +241,24 @@ class LoginController extends Controller
     )]
     public function logout(Request $request): JsonResponse
     {
+        $userId = $request->session()->get('admin_user_id');
+
+        // Record audit log before session invalidation
+        if ($userId) {
+            $this->auditLogRepository->create(new AuditLog(
+                id: Str::uuid()->toString(),
+                userId: $userId,
+                action: 'auth.logout',
+                entityType: null,
+                entityId: null,
+                oldValues: null,
+                newValues: null,
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent(),
+                createdAt: new DateTimeImmutable(),
+            ));
+        }
+
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use Domain\Auth\Ports\AdminUserRepositoryInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use OpenApi\Attributes as OA;
 class TwoFactorController extends Controller
 {
     public function __construct(
-        private readonly AdminUserRepositoryInterface $users,
+        private readonly RootUserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
     ) {}
 
