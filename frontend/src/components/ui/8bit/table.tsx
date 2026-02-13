@@ -15,7 +15,7 @@ import {
   TableHead as ShadcnTableHead,
   TableHeader as ShadcnTableHeader,
   TableRow as ShadcnTableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/8bit/table-shadcn";
 
 import "@/components/ui/8bit/styles/retro.css";
 

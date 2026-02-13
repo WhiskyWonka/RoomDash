@@ -10,7 +10,7 @@ import {
   CardFooter as ShadcnCardFooter,
   CardHeader as ShadcnCardHeader,
   CardTitle as ShadcnCardTitle,
-} from "@/components/ui/shadcn/card";
+} from "@/components/ui/8bit/card-shadcn";
 
 import "@/components/ui/8bit/styles/retro.css";
 
@@ -70,19 +70,14 @@ function CardHeader({ ...props }: BitCardProps) {
   );
 }
 
-function CardTitle({ className, font, ...props }: BitCardProps) {
+function CardTitle({ ...props }: BitCardProps) {
+  const { className, font } = props;
+
   return (
-    <h3
+    <ShadcnCardTitle
+      className={cn(font !== "normal" && "retro", className)}
       {...props}
-      className={cn(
-        "font-semibold leading-none tracking-tight",
-        "mb-2",
-        font !== "normal" && "retro",
-        className
-      )}
-    >
-      {props.children}
-    </h3>
+    />
   );
 }
 
@@ -91,13 +86,13 @@ function CardDescription({ ...props }: BitCardProps) {
 
   return (
     <ShadcnCardDescription
-      className={cn("text-xs", font !== "normal" && "retro", className)}
+      className={cn(font !== "normal" && "retro", className)}
       {...props}
     />
   );
 }
-
-/*function CardAction({ ...props }: BitCardProps) {
+/*
+function CardAction({ ...props }: BitCardProps) {
   const { className, font } = props;
 
   return (

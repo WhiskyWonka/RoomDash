@@ -1,10 +1,10 @@
 import { request } from "./api";
 
-const AUTH_BASE = "/api";
+//const AUTH_BASE = "/api";
+const AUTH_BASE = "/api/auth";
 
 export const authApi = {
-    // El "Handshake": Laravel nos da la cookie CSRF
-    // Sin esto, el POST de login fallará con error 419 (CSRF mismatch)
+    // CSRF cookie
     csrf: () => request<void>("/sanctum/csrf-cookie"),
 
     login: (credentials: { email: string; password: string }) =>
@@ -13,9 +13,14 @@ export const authApi = {
             body: JSON.stringify(credentials),
         }),
 
+    verify2FA: (code: string) =>
+        request<any>(`${AUTH_BASE}/verify-2fa`, {
+            method: "POST",
+            body: JSON.stringify({ code }),
+        }),
+
     logout: () =>
         request<void>(`${AUTH_BASE}/logout`, { method: "POST" }),
 
-    // Obtener el usuario actual (para saber si estamos logueados)
-    me: () => request<any>(`${AUTH_BASE}/user`),
+    me: () => request<any>(`${AUTH_BASE}/me`)
 };
