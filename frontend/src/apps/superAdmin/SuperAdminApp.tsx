@@ -10,6 +10,11 @@ import { authApi } from "@/lib/authApi";
 
 function SuperAdminApp() {
     const [loading, setLoading] = useState(true);
+    const [authState, setAuthState] = useState<{
+        user: any;
+        twoFactorPending: boolean;
+    }>({ user: null, twoFactorPending: false });
+
     const [user, setUser] = useState<any>(null);
     const location = useLocation();
 
@@ -19,10 +24,16 @@ function SuperAdminApp() {
             console.log("FETCHING_USER_DATA...");
             const data = await authApi.me();
             console.log("SUCCESS_USER:", data);
-            setUser(data.user);
+
+            setAuthState({
+                user: data.user,
+                twoFactorPending: data.twoFactorPending || false
+            });
+            //setUser(data.user);
         } catch (error: any) {
             console.log("DEBUG_AUTH_ERROR:", error.message);
-            setUser(null);
+            setAuthState({ user: null, twoFactorPending: false });
+            //setUser(null);
         } finally {
             setLoading(false);
         }
@@ -57,7 +68,8 @@ function SuperAdminApp() {
         );
     }
 
-    const isAuthenticated = !!user;
+    const isAuthenticated = !!authState.user && !authState.twoFactorPending;
+    //const isAuthenticated = !!user;
 
     return (
         <Routes>
