@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -9,20 +7,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class AdminUserSeeder extends Seeder
+class RootUserSeeder extends Seeder
 {
-    /**
-     * Seed the admin user.
-     */
-    public function run(): void
+     public function run(): void
     {
         $email = env('ADMIN_EMAIL', 'admin@roomdash.local');
         $password = env('ADMIN_PASSWORD', 'password');
+        $existingUser = DB::table('root_users')->where('email', $email)->first();
 
-        DB::table('admin_users')->updateOrInsert(
+        DB::table('root_users')->updateOrInsert(
             ['email' => $email],
             [
-                'id' => Str::uuid()->toString(),
+                'id' => $existingUser->id ?? Str::uuid()->toString(),
+                'username' => 'admin',
+                'first_name' => 'System',
+                'last_name' => 'Administrator',
                 'email' => $email,
                 'password' => Hash::make($password),
                 'two_factor_secret' => null,
@@ -31,9 +30,13 @@ class AdminUserSeeder extends Seeder
                 'two_factor_confirmed_at' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'avatar_path' => null,
+                'remember_token' => null
             ]
         );
 
-        $this->command->info("Admin user created: {$email}");
+        $this->command->info("Root user created: {$email}");
     }
 }
