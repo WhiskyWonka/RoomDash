@@ -89,7 +89,9 @@ class LoginController extends Controller
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($user->id);
 
-        $request->session()->put('2fa_pending', true);
+        $is2FaPending = $user->twoFactorEnabled; 
+    
+        $request->session()->put('2fa_pending', $is2FaPending);
         $request->session()->put('admin_user_id', $user->id);
 
         return response()->json([

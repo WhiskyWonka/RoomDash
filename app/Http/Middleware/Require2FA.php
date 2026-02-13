@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
 class Require2FA
 {
@@ -16,7 +17,9 @@ class Require2FA
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        if (! $request->session()->get('2fa_verified', false)) {
+        $user = Auth::guard('admin')->user();
+
+        if ($user && $user->twoFactorEnabled && ! $request->session()->get('2fa_verified', false)) {
             return response()->json([
                 'message' => '2FA verification required',
                 'code' => '2FA_REQUIRED',

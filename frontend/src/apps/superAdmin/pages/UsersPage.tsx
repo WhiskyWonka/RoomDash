@@ -3,7 +3,7 @@ import { DeleteUserDialog } from '@/components/ui/8bit/blocks/users/DeleteUserDi
 import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
 import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
 import { Button } from '@/components/ui/8bit/button';
-import { usersApi } from '@/lib/api';
+import { rootUsersApi } from '@/lib/api';
 import { User } from '@/types/user';
 import { useEffect, useState } from "react";
 
@@ -19,7 +19,23 @@ export default function UsersPage() {
 
 
     const load = () => {
-        usersApi.list().then(setUsers);
+        rootUsersApi.list()
+            .then((response: any) => {
+                const usersArray = response.data || [];
+                
+                // Si tu componente espera "name" pero el backend manda firstName/lastName, 
+                // puedes normalizarlo aquí:
+                /*const normalizedUsers = usersArray.map((u: any) => ({
+                    ...u,
+                    name: u.name || `${u.firstName} ${u.lastName}`, // Fallback por si acaso
+                }));*/
+
+                setUsers(usersArray);
+            })
+            .catch(err => {
+                console.error("LOAD_USERS_ERROR:", err);
+                setUsers([]);
+            });
     };
 
     useEffect(load, []);
@@ -42,9 +58,9 @@ export default function UsersPage() {
     const handleSubmit = async (name: string, email: string) => {
         try {
             if (editing) {
-                await usersApi.update(editing.id, { name, email });
+                await rootUsersApi.update(editing.id, { name, email });
             } else {
-                await usersApi.create({ name, email });
+                await rootUsersApi.create({ name, email });
             }
             setDialogOpen(false);
             load();
@@ -55,7 +71,7 @@ export default function UsersPage() {
 
     const handleConfirmDelete = async () => {
         if (deleting) {
-            await usersApi.delete(deleting.id);
+            await rootUsersApi.delete(deleting.id);
         }
         setDeleteOpen(false);
         load();
