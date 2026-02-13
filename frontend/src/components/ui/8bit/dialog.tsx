@@ -11,7 +11,7 @@ import {
   DialogHeader as ShadcnDialogHeader,
   DialogTitle as ShadcnDialogTitle,
   DialogTrigger as ShadcnDialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/shadcn/dialog";
 
 import "@/components/ui/8bit/styles/retro.css";
 
