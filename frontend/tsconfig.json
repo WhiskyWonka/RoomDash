@@ -18,6 +18,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
+      "@/shadcn/*": ["./src/components/ui/shadcn/*"],
+      "@/8bit/*": ["./src/components/ui/8bit/*"],
       "@/*": ["./src/*"]
     }
   },

@@ -56,7 +56,7 @@ import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/shadcn/badge"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/shadcn/button"
 import {
   ChartConfig,
   ChartContainer,
@@ -99,7 +99,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/shadcn/table"
 import {
   Tabs,
   TabsContent,

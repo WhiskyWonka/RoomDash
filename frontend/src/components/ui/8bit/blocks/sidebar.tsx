@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, User, UserStar, Sparkles } from "lucide-react";
+import { Calendar, Home, Inbox, Search, Settings, User, UserStar, Puzzle } from "lucide-react";
 import { Link } from "react-router-dom"
 
 import {
@@ -44,7 +44,7 @@ const items = [
   {
     title: "Features",
     url: "features",
-    icon: Sparkles,
+    icon: Puzzle,
   },
   {
     title: "Settings",

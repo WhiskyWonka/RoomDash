@@ -1,22 +1,54 @@
-import * as React from "react"
+import { type VariantProps, cva } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
+import { Input as ShadcnInput } from "@/components/ui/8bit/input-shadcn";
+
+import "@/components/ui/8bit/styles/retro.css";
+
+export const inputVariants = cva("", {
+  variants: {
+    font: {
+      normal: "",
+      retro: "retro",
+    },
+  },
+  defaultVariants: {
+    font: "retro",
+  },
+});
+
+export interface BitInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement>,
+    VariantProps<typeof inputVariants> {
+  asChild?: boolean;
+}
+
+function Input({ ...props }: BitInputProps) {
+  const { className, font } = props;
+
+  return (
+    <div
+      className={cn(
+        "relative border-y-6 border-foreground dark:border-ring !p-0 flex items-center",
+        className
+      )}
+    >
+      <ShadcnInput
+        {...props}
         className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "rounded-none ring-0 !w-full",
+          font !== "normal" && "retro",
           className
         )}
-        ref={ref}
-        {...props}
       />
-    )
-  }
-)
-Input.displayName = "Input"
 
-export { Input }
+      <div
+        className="absolute inset-0 border-x-6 -mx-1.5 border-foreground dark:border-ring pointer-events-none"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
+export { Input };

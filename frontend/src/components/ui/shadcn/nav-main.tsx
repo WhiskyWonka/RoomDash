@@ -4,7 +4,7 @@ import { MailIcon, PlusCircleIcon, type LucideIcon } from "lucide-react"
 
 import { Link } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/shadcn/button"
 import {
     SidebarGroup,
     SidebarGroupContent,
