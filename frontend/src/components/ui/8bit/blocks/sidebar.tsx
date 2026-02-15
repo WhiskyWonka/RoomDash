@@ -60,7 +60,7 @@ export function AppSidebar() {
     >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="mb-4">RoomDash</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[#00ff00] font-bold text-lg mt-2 mb-4">RoomDash</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

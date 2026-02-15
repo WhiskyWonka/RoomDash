@@ -4,7 +4,7 @@ import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
 import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
 import { Button } from '@/components/ui/8bit/button';
 import { rootUsersApi } from '@/lib/api';
-import { User } from '@/types/user';
+import { RootUser as User } from '@/types/rootUser';
 import { useEffect, useState } from "react";
 
 
@@ -55,12 +55,12 @@ export default function UsersPage() {
         setDeleteOpen(true);
     };
 
-    const handleSubmit = async (name: string, email: string) => {
+    const handleSubmit = async (first_name: string, last_name: string, username: string, email: string) => {
         try {
             if (editing) {
-                await rootUsersApi.update(editing.id, { name, email });
+                await rootUsersApi.update(editing.id, { first_name, last_name, username, email });
             } else {
-                await rootUsersApi.create({ name, email });
+                await rootUsersApi.create({ first_name, last_name, username, email });
             }
             setDialogOpen(false);
             load();

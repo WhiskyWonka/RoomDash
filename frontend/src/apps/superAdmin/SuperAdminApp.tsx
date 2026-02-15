@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/authApi";
+import VerifyRootUserPage from './pages/VerifyRootUserPage';
 
 function SuperAdminApp() {
     const [loading, setLoading] = useState(true);
@@ -52,8 +53,9 @@ function SuperAdminApp() {
     // 3. Segundo useEffect para cambios de ruta (OPCIONAL)
     // Pero OJO: Todos los Hooks van ANTES de cualquier return
     useEffect(() => {
-        if (user && location.pathname.includes('/login')) {
+        if ((user && location.pathname.includes('/login')) || location.pathname.includes('/verify-email')) {
             // Si ya hay usuario y estamos en login, no hace falta re-chequear,
+            // O si va a validar el token email
             // la lógica de abajo nos redireccionará.
             return;
         }
@@ -82,6 +84,7 @@ function SuperAdminApp() {
                         : <LoginPage onLoginSuccess={checkAuth} /> 
                 }
             />
+            <Route path="verify-email" element={<VerifyRootUserPage />} />
 
             <Route 
                 path="/" 

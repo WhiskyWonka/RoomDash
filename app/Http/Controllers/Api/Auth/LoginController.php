@@ -89,15 +89,35 @@ class LoginController extends Controller
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($user->id);
 
-        $is2FaPending = $user->twoFactorEnabled; 
-    
-        $request->session()->put('2fa_pending', $is2FaPending);
         $request->session()->put('admin_user_id', $user->id);
+        $request->session()->put('2fa_pending', true);
 
+        if (!$user->twoFactorEnabled) {
+            $request->session()->put('2fa_pending', true);
+                        
+            // Generamos secreto si no tiene
+            $secret = $this->users->getTwoFactorSecret($user->id);
+            if (!$secret) {
+                $secret = $this->twoFactor->generateSecret();
+                $this->users->setTwoFactorSecret($user->id, $secret);
+            }
+
+            return response()->json([
+                'user' => $user,
+                'twoFactorRequired' => true,
+                'requiresSetup' => true,
+                'qr_code_url' => $this->twoFactor->generateQrCodeDataUri($secret, $user->email),
+                'secret' => $secret,
+            ]);
+        }
+
+
+
+        $request->session()->put('2fa_pending', true);
         return response()->json([
             'user' => $user,
-            'twoFactorEnabled' => $user->twoFactorEnabled,
-            'requiresTwoFactorSetup' => ! $user->twoFactorEnabled,
+            'twoFactorRequired' => true,
+            'requiresSetup' => false,
         ]);
     }
 

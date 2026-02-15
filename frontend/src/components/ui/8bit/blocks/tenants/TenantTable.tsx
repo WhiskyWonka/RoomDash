@@ -32,7 +32,7 @@ export function TenantTable({ tenants, onEdit, onDelete }: Props) {
                         <TableCell>{new Date(t.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="flex justify-end gap-4">
                             <Button variant="outline" size="sm" onClick={() => onEdit(t)}>Edit</Button>
-                            <Button variant="destructive" size="sm" onClick={() => onDelete(t)}>Delete</Button>
+                            <Button variant="warning" size="sm" onClick={() => onDelete(t)}>Delete</Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">Open</Button>
