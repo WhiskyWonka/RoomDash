@@ -17,10 +17,6 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
         // Public auth routes with rate limiting
         Route::middleware(['web', 'throttle:login'])->group(function () {
             Route::post('/auth/login', [LoginController::class, 'login']);
-        });
-
-        // Public email verification route (throttled)
-        Route::middleware(['web', 'throttle:login'])->group(function () {
             Route::post('/auth/verify-email', VerifyEmailController::class);
         });
 
@@ -47,8 +43,9 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             // Root User CRUD
             Route::get('/root-users', [RootUserController::class, 'index']);
             Route::get('/root-users/{id}', [RootUserController::class, 'show']);
-            Route::post('/root-users', [RootUserController::class, 'store']);
+            Route::post('/root-users', [RootUserController::class, 'store'])->middleware('audit.log');
             Route::put('/root-users/{id}', [RootUserController::class, 'update']);
+            // TODO: agregar /root-users/{id}/password para cambiar contraseña sin afectar email o rol
             Route::delete('/root-users/{id}', [RootUserController::class, 'destroy']);
 
             // Root User Activation / Deactivation

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Domain\Auth\Ports;
 
 use Domain\Auth\Entities\RootUser;
+use Domain\Shared\DTOs\PaginatedResult;
 
 interface RootUserRepositoryInterface
 {
@@ -13,6 +14,8 @@ interface RootUserRepositoryInterface
     public function findByEmail(string $email): ?RootUser;
 
     public function countActive(): int;
+
+    public function existsById(string $id): bool;
 
     public function existsByEmail(string $email): bool;
 
@@ -43,4 +46,11 @@ interface RootUserRepositoryInterface
     public function setRecoveryCodes(string $id, array $codes): void;
 
     public function useRecoveryCode(string $id, string $code): bool;
+
+    public function listPaginated(
+        int $page, 
+        int $perPage, 
+        string $sortField, 
+        string $sortDirection
+    ): PaginatedResult;
 }

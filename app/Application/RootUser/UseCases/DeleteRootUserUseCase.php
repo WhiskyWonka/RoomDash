@@ -10,7 +10,7 @@ use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Services\LastActiveUserGuard;
-use Illuminate\Support\Str;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 
 class DeleteRootUserUseCase
 {
@@ -18,6 +18,7 @@ class DeleteRootUserUseCase
         private readonly RootUserRepositoryInterface $userRepository,
         private readonly LastActiveUserGuard $lastActiveGuard,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
+        private readonly UuidGeneratorInterface $uuidGenerator
     ) {}
 
     public function execute(DeleteRootUserRequest $request): void
@@ -35,7 +36,7 @@ class DeleteRootUserUseCase
 
         // Record audit log
         $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
+            id: $this->uuidGenerator->generate(),
             userId: $request->actorId,
             action: 'root_user.deleted',
             entityType: 'root_user',

@@ -10,6 +10,9 @@
 | need to change it using the "pest()" function to bind a different classes or traits.
 |
 */
+// Configuración para Tests de Arquitectura
+pest()->extend(Tests\TestCase::class)
+    ->in('Architecture');
 
 pest()->extend(Tests\TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
@@ -17,6 +20,8 @@ pest()->extend(Tests\TestCase::class)
 
 pest()->extend(Tests\TestCase::class)
     ->in('Integration');
+
+pest()->group('architecture')->in('Architecture');
 
 afterEach(function () {
     Mockery::close();

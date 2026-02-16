@@ -27,6 +27,7 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.3",
+        "pestphp/pest-plugin-arch": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
     "autoload": {
@@ -35,6 +36,7 @@
             "Domain\\": "app/Domain/",
             "Application\\": "app/Application/",
             "Infrastructure\\": "app/Infrastructure/",
+            "Http\\": "Http/", 
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

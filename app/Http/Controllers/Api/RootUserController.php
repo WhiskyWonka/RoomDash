@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RootUserStoreRequest;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Application\EmailVerification\UseCases\ResendVerificationUseCase;
 use Application\RootUser\DTOs\CreateRootUserRequest;
@@ -16,19 +18,25 @@ use Application\RootUser\UseCases\UpdateRootUserUseCase;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
+use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
 use Domain\Auth\Exceptions\LastActiveUserException;
 use Domain\Auth\Exceptions\SelfDeletionException;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Services\LastActiveUserGuard;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Infrastructure\Auth\Models\RootUser;
 
+// use Illuminate\Support\Str;
+
+// use Infrastructure\Auth\Models\RootUser;
+// TODO: interface de documentacion swagger?
 class RootUserController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly CreateRootUserUseCase $createUseCase,
         private readonly UpdateRootUserUseCase $updateUseCase,
@@ -37,6 +45,7 @@ class RootUserController extends Controller
         private readonly RootUserRepositoryInterface $userRepository,
         private readonly LastActiveUserGuard $lastActiveGuard,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
+        private readonly UuidGeneratorInterface $uuidGenerator,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -44,68 +53,65 @@ class RootUserController extends Controller
         $perPage = (int) $request->query('per_page', '15');
         $page = (int) $request->query('page', '1');
 
-        $paginator = RootUser::orderBy('created_at', 'desc')
-            ->paginate($perPage, ['*'], 'page', $page);
+        $paginator = $this->userRepository->listPaginated(
+            page: $page,
+            perPage: $perPage,
+            sortField: $request->query('sort_field', 'created_at'),
+            sortDirection: $request->query('sort_direction', 'desc'),
+        );
 
-        $data = collect($paginator->items())->map(fn (RootUser $user) => [
+        $data = collect($paginator->items)->map(fn (RootUser $user) => [
             'id' => $user->id,
             'username' => $user->username,
-            'firstName' => $user->first_name,
-            'lastName' => $user->last_name,
+            'firstName' => $user->firstName,
+            'lastName' => $user->lastName,
             'email' => $user->email,
-            'avatarUrl' => $user->avatar_path ? Storage::disk('public')->url($user->avatar_path) : null,
-            'isActive' => $user->is_active,
-            'emailVerifiedAt' => $user->email_verified_at?->toIso8601String(),
-            'twoFactorEnabled' => $user->two_factor_enabled,
-            'createdAt' => $user->created_at->toIso8601String(),
+            'avatarUrl' => $user->avatarPath ? Storage::url($user->avatarPath) : null, // TODO: storage tiene que ser infra. poner una regla para que salte
+            'isActive' => $user->isActive,
+            'createdAt' => $user->createdAt->format('Y-m-d H:i:s'),
         ])->all();
 
-        return response()->json([
-            'data' => $data,
+        return $this->success(data: [
+            'users' => $data,
             'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
+                'current_page' => $paginator->currentPage,
+                'per_page' => $paginator->perPage,
+                'total' => $paginator->total,
             ],
         ]);
     }
 
     public function show(string $id): JsonResponse
     {
-        if (! Str::isUuid($id)) {
+        // dd($id);
+        if (! $this->uuidGenerator->validate($id)) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
 
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'firstName' => $user->first_name,
-                'lastName' => $user->last_name,
-                'email' => $user->email,
-                'avatarUrl' => $user->avatar_path ? Storage::disk('public')->url($user->avatar_path) : null,
-                'isActive' => $user->is_active,
-                'emailVerifiedAt' => $user->email_verified_at?->toIso8601String(),
-                'twoFactorEnabled' => $user->two_factor_enabled,
-                'createdAt' => $user->created_at->toIso8601String(),
-            ],
+        // TODO: estos datas deberian estar en una capa de presenters
+        return $this->success(data: [
+            'id' => $user->id,
+            'username' => $user->username,
+            'firstName' => $user->firstName,
+            'lastName' => $user->lastName,
+            'email' => $user->email,
+            'avatarUrl' => $user->avatarPath ? Storage::url($user->avatarPath) : null,
+            'isActive' => $user->isActive,
+            'emailVerifiedAt' => $user->emailVerifiedAt?->format('Y-m-d H:i:s'),
+            'twoFactorEnabled' => $user->twoFactorEnabled,
+            'createdAt' => $user->createdAt->format('Y-m-d H:i:s'),
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(RootUserStoreRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_-]+$/', 'unique:root_users,username'],
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:root_users,email',
-        ]);
+        $data = $request->validated();
 
         $actorId = $request->session()->get('admin_user_id');
 
@@ -114,6 +120,7 @@ class RootUserController extends Controller
             firstName: $data['first_name'],
             lastName: $data['last_name'],
             email: $data['email'],
+            password: $data['password'],
             actorId: $actorId,
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
@@ -121,9 +128,10 @@ class RootUserController extends Controller
 
         $user = $this->createUseCase->execute($useCaseRequest);
 
-        return response()->json([
-            'data' => $user->jsonSerialize(),
-        ], 201);
+        $request->merge(['malinuplated_entity' => 'userroot']);
+
+        return $this->success(data: $user, message: 'Root user created successfully', code: 201);
+
     }
 
     public function update(Request $request, string $id): JsonResponse
@@ -132,16 +140,16 @@ class RootUserController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $existingUser = RootUser::find($id);
+        $existingUser = $this->userRepository->existsById($id);
         if (! $existingUser) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
         $data = $request->validate([
-            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_-]+$/', 'unique:root_users,username,' . $id],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_-]+$/', 'unique:root_users,username,'.$id],
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:root_users,email,' . $id,
+            'email' => 'required|email|max:255|unique:root_users,email,'.$id,
         ]);
 
         $actorId = $request->session()->get('admin_user_id');
@@ -180,7 +188,7 @@ class RootUserController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $existingUser = RootUser::find($id);
+        $existingUser = $this->userRepository->findById($id);
         if (! $existingUser) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -205,7 +213,7 @@ class RootUserController extends Controller
 
     public function deactivate(Request $request, string $id): JsonResponse
     {
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -230,7 +238,7 @@ class RootUserController extends Controller
             newValues: ['is_active' => false],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable(),
+            createdAt: new DateTimeImmutable,
         ));
 
         return response()->json(['message' => 'User deactivated']);
@@ -238,7 +246,7 @@ class RootUserController extends Controller
 
     public function activate(Request $request, string $id): JsonResponse
     {
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -257,7 +265,7 @@ class RootUserController extends Controller
             newValues: ['is_active' => true],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable(),
+            createdAt: new DateTimeImmutable,
         ));
 
         return response()->json(['message' => 'User activated']);
@@ -265,7 +273,7 @@ class RootUserController extends Controller
 
     public function resendVerification(Request $request, string $id): JsonResponse
     {
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -290,7 +298,7 @@ class RootUserController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -321,19 +329,19 @@ class RootUserController extends Controller
             newValues: ['avatar_path' => $path],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable(),
+            createdAt: new DateTimeImmutable,
         ));
 
         return response()->json([
             'data' => [
-                'avatarUrl' => Storage::disk('public')->url($path),
+                'avatarUrl' => Storage::url($path),
             ],
         ]);
     }
 
     public function deleteAvatar(Request $request, string $id): JsonResponse
     {
-        $user = RootUser::find($id);
+        $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }

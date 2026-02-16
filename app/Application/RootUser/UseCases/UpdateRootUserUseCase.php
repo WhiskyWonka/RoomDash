@@ -14,7 +14,7 @@ use Domain\Auth\Exceptions\DuplicateUsernameException;
 use Domain\Auth\Ports\EmailVerificationServiceInterface;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\ValueObjects\Username;
-use Illuminate\Support\Str;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 
 class UpdateRootUserUseCase
 {
@@ -22,6 +22,7 @@ class UpdateRootUserUseCase
         private readonly RootUserRepositoryInterface $userRepository,
         private readonly EmailVerificationServiceInterface $emailService,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
+        private readonly UuidGeneratorInterface $uuidGenerator
     ) {}
 
     public function execute(UpdateRootUserRequest $request): RootUser
@@ -78,7 +79,7 @@ class UpdateRootUserUseCase
         ];
 
         $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
+            id: $this->uuidGenerator->generate(),
             userId: $request->actorId,
             action: 'root_user.updated',
             entityType: 'root_user',
