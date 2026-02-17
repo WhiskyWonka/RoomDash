@@ -44,7 +44,7 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             Route::get('/root-users', [RootUserController::class, 'index']);
             Route::get('/root-users/{id}', [RootUserController::class, 'show']);
             Route::post('/root-users', [RootUserController::class, 'store'])->middleware('audit.log');
-            Route::put('/root-users/{id}', [RootUserController::class, 'update']);
+            Route::put('/root-users/{id}', [RootUserController::class, 'update'])->middleware('audit.log');
             // TODO: agregar /root-users/{id}/password para cambiar contraseña sin afectar email o rol
             Route::delete('/root-users/{id}', [RootUserController::class, 'destroy']);
 

@@ -18,6 +18,24 @@ class AuditLogger
 
     public function handle($request, Closure $next)
     {
+        if (in_array($request->method(), ['PUT', 'PATCH', 'DELETE'])) {
+
+            $id = $request->route('id');
+
+            if ($id) {
+                // Hacemos una consulta rápida solo para auditoría
+                // Usamos query builder para mayor velocidad y menos consumo de memoria
+                $oldData = \Illuminate\Support\Facades\DB::table('root_users')
+                    ->where('id', $id)
+                    ->first();
+
+                if ($oldData) {
+                    // Guardamos el estado previo en los atributos del request
+                    $request->attributes->set('old_values', (array) $oldData);
+                }
+            }
+        }
+
         return $next($request);
     }
 
@@ -34,6 +52,8 @@ class AuditLogger
 
         $response = json_decode($response->getContent());
 
+        // Capture old values for audit log
+
         // 3. Guardar el log
         // Record audit log
         $this->auditLogRepository->create(new AuditLog(
@@ -42,7 +62,7 @@ class AuditLogger
             action: $action ?? 'unknown_action',
             entityType: $entity,
             entityId: $response->data->id,
-            oldValues: null,
+            oldValues: $request->attributes->get('old_values') ?? null,
             newValues: [
                 'username' => $response->data->username,
                 'first_name' => $response->data->firstName,
