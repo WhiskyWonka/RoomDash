@@ -6,9 +6,7 @@ namespace Application\RootUser\UseCases;
 
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use Application\RootUser\DTOs\CreateRootUserRequest;
-use DateTimeImmutable;
 // use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
-use Domain\AuditLog\Entities\AuditLog;
 use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\DuplicateEmailException;
 use Domain\Auth\Exceptions\DuplicateUsernameException;
@@ -59,25 +57,6 @@ class CreateRootUserUseCase
 
         // Send verification email
         $this->emailService->sendVerificationEmail($user->id);
-
-        // Record audit log
-        // $this->auditLogRepository->create(new AuditLog(
-        //     id: $this->uuidGenerator->generate(),
-        //     userId: $request->actorId,
-        //     action: 'root_user.created',
-        //     entityType: 'root_user',
-        //     entityId: $user->id,
-        //     oldValues: null,
-        //     newValues: [
-        //         'username' => $user->username->value(),
-        //         'first_name' => $user->firstName,
-        //         'last_name' => $user->lastName,
-        //         'email' => $user->email,
-        //     ],
-        //     ipAddress: $request->ipAddress,
-        //     userAgent: $request->userAgent,
-        //     createdAt: new DateTimeImmutable,
-        // ));
 
         return $user;
     }

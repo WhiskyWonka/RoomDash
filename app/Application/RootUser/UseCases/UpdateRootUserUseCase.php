@@ -47,12 +47,12 @@ class UpdateRootUserUseCase
         }
 
         // Capture old values for audit log
-        $oldValues = [
-            'username' => $existingUser->username->value(),
-            'first_name' => $existingUser->firstName,
-            'last_name' => $existingUser->lastName,
-            'email' => $existingUser->email,
-        ];
+        // $oldValues = [
+        //     'username' => $existingUser->username->value(),
+        //     'first_name' => $existingUser->firstName,
+        //     'last_name' => $existingUser->lastName,
+        //     'email' => $existingUser->email,
+        // ];
 
         // Update user
         $updatedUser = $this->userRepository->update($request->id, [
@@ -71,25 +71,25 @@ class UpdateRootUserUseCase
         }
 
         // Record audit log
-        $newValues = [
-            'username' => $request->username,
-            'first_name' => $request->firstName,
-            'last_name' => $request->lastName,
-            'email' => $request->email,
-        ];
+        // $newValues = [
+        //     'username' => $request->username,
+        //     'first_name' => $request->firstName,
+        //     'last_name' => $request->lastName,
+        //     'email' => $request->email,
+        // ];
 
-        $this->auditLogRepository->create(new AuditLog(
-            id: $this->uuidGenerator->generate(),
-            userId: $request->actorId,
-            action: 'root_user.updated',
-            entityType: 'root_user',
-            entityId: $request->id,
-            oldValues: $oldValues,
-            newValues: $newValues,
-            ipAddress: $request->ipAddress,
-            userAgent: $request->userAgent,
-            createdAt: new DateTimeImmutable(),
-        ));
+        // $this->auditLogRepository->create(new AuditLog(
+        //     id: $this->uuidGenerator->generate(),
+        //     userId: $request->actorId,
+        //     action: 'root_user.updated',
+        //     entityType: 'root_user',
+        //     entityId: $request->id,
+        //     oldValues: $oldValues,
+        //     newValues: $newValues,
+        //     ipAddress: $request->ipAddress,
+        //     userAgent: $request->userAgent,
+        //     createdAt: new DateTimeImmutable(),
+        // ));
 
         return $updatedUser;
     }

@@ -6,7 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\RootUserStoreRequest;
+use App\Http\Requests\RootUser\RootUserStoreRequest;
+use App\Http\Requests\RootUser\RootUserUpdateRequest;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Application\EmailVerification\UseCases\ResendVerificationUseCase;
 use Application\RootUser\DTOs\CreateRootUserRequest;
@@ -128,29 +129,20 @@ class RootUserController extends Controller
 
         $user = $this->createUseCase->execute($useCaseRequest);
 
-        $request->merge(['malinuplated_entity' => 'userroot']);
+        $request->merge(['manipulated_entity' => 'userroot']);
 
         return $this->success(data: $user, message: 'Root user created successfully', code: 201);
 
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(RootUserUpdateRequest $request, string $id): JsonResponse
     {
-        if (! Str::isUuid($id)) {
-            return response()->json(['message' => 'Not found'], 404);
-        }
-
         $existingUser = $this->userRepository->existsById($id);
         if (! $existingUser) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $data = $request->validate([
-            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_-]+$/', 'unique:root_users,username,'.$id],
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:root_users,email,'.$id,
-        ]);
+        $data = $request->validated();
 
         $actorId = $request->session()->get('admin_user_id');
 
@@ -167,19 +159,9 @@ class RootUserController extends Controller
 
         $updatedUser = $this->updateUseCase->execute($useCaseRequest);
 
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'username' => $updatedUser->username->value(),
-                'firstName' => $updatedUser->firstName,
-                'lastName' => $updatedUser->lastName,
-                'email' => $updatedUser->email,
-                'isActive' => $updatedUser->isActive,
-                'emailVerifiedAt' => $updatedUser->emailVerifiedAt?->format('c'),
-                'twoFactorEnabled' => $updatedUser->twoFactorEnabled,
-                'createdAt' => $updatedUser->createdAt->format('c'),
-            ],
-        ]);
+        $request->merge(['manipulated_entity' => 'userroot']);
+
+        return $this->success(data: $updatedUser, message: 'Root user updated successfully', code: 200);
     }
 
     public function destroy(Request $request, string $id): JsonResponse

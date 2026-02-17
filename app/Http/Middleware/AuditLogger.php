@@ -23,6 +23,9 @@ class AuditLogger
 
     public function terminate($request, $response)
     {
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+            return;
+        }
         // 1. Identificar la acción
         $action = $request->route()?->getActionMethod(); // ej: store, update, destroy
 
