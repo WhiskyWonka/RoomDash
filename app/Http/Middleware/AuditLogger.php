@@ -7,70 +7,82 @@ use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 use Domain\Shared\Ports\UuidGeneratorInterface;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuditLogger
 {
+    private const ACTION_MAP = [
+        'store' => 'created',
+        'update' => 'updated',
+        'destroy' => 'deleted',
+        'deactivate' => 'deactivated',
+        'activate' => 'activated',
+        'uploadAvatar' => 'avatar_updated',
+        'deleteAvatar' => 'avatar_deleted',
+    ];
+
     public function __construct(
         private readonly AuditLogRepositoryInterface $auditLogRepository,
         private readonly UuidGeneratorInterface $uuidGenerator,
     ) {}
 
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next, string $entityType = 'unknown', string $tableName = ''): Response
     {
-        if (in_array($request->method(), ['PUT', 'PATCH', 'DELETE'])) {
-
+        if (in_array($request->method(), ['PUT', 'PATCH', 'DELETE']) && $tableName) {
             $id = $request->route('id');
 
             if ($id) {
-                // Hacemos una consulta rápida solo para auditoría
-                // Usamos query builder para mayor velocidad y menos consumo de memoria
-                $oldData = \Illuminate\Support\Facades\DB::table('root_users')
-                    ->where('id', $id)
-                    ->first();
+                $oldData = DB::table($tableName)->where('id', $id)->first();
 
                 if ($oldData) {
-                    // Guardamos el estado previo en los atributos del request
                     $request->attributes->set('old_values', (array) $oldData);
                 }
             }
         }
 
+        $request->attributes->set('audit_entity_type', $entityType);
+
         return $next($request);
     }
 
-    public function terminate($request, $response)
+    public function terminate(Request $request, Response $response): void
     {
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode < 200 || $statusCode >= 300) {
             return;
         }
-        // 1. Identificar la acción
-        $action = $request->route()?->getActionMethod(); // ej: store, update, destroy
 
-        // 2. Intentar obtener la entidad desde los atributos del request
-        $entity = $request->attributes->get('manipulated_entity');
+        $method = $request->route()?->getActionMethod();
+        $entityType = $request->attributes->get('audit_entity_type', 'unknown');
+        $actionVerb = self::ACTION_MAP[$method] ?? $method ?? 'unknown_action';
+        $action = "{$entityType}.{$actionVerb}";
 
-        $response = json_decode($response->getContent());
+        $oldValues = $request->attributes->get('old_values');
+        $entityId = $request->route('id') ?? 'N/A';
+        $newValues = null;
 
-        // Capture old values for audit log
+        if ($statusCode !== 204) {
+            $decodedResponse = json_decode($response->getContent());
 
-        // 3. Guardar el log
-        // Record audit log
+            if (isset($decodedResponse->data) && is_object($decodedResponse->data)) {
+                $entityId = $decodedResponse->data->id ?? $entityId;
+                $newValues = (array) $decodedResponse->data;
+            }
+        }
+
         $this->auditLogRepository->create(new AuditLog(
             id: $this->uuidGenerator->generate(),
             userId: $request->session()->get('admin_user_id') ?? 'system',
-            action: $action ?? 'unknown_action',
-            entityType: $entity,
-            entityId: $response->data->id,
-            oldValues: $request->attributes->get('old_values') ?? null,
-            newValues: [
-                'username' => $response->data->username,
-                'first_name' => $response->data->firstName,
-                'last_name' => $response->data->lastName,
-                'email' => $response->data->email,
-            ],
-            ipAddress: $request->ipAddress,
-            userAgent: $request->userAgent,
+            action: $action,
+            entityType: $entityType,
+            entityId: $entityId,
+            oldValues: $oldValues,
+            newValues: $newValues,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
             createdAt: new DateTimeImmutable,
         ));
     }

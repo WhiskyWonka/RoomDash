@@ -16,9 +16,6 @@ use Application\RootUser\DTOs\UpdateRootUserRequest;
 use Application\RootUser\UseCases\CreateRootUserUseCase;
 use Application\RootUser\UseCases\DeleteRootUserUseCase;
 use Application\RootUser\UseCases\UpdateRootUserUseCase;
-use DateTimeImmutable;
-use Domain\AuditLog\Entities\AuditLog;
-use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
 use Domain\Auth\Exceptions\LastActiveUserException;
@@ -45,7 +42,6 @@ class RootUserController extends Controller
         private readonly ResendVerificationUseCase $resendVerificationUseCase,
         private readonly RootUserRepositoryInterface $userRepository,
         private readonly LastActiveUserGuard $lastActiveGuard,
-        private readonly AuditLogRepositoryInterface $auditLogRepository,
         private readonly UuidGeneratorInterface $uuidGenerator,
     ) {}
 
@@ -84,7 +80,6 @@ class RootUserController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        // dd($id);
         if (! $this->uuidGenerator->validate($id)) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -129,10 +124,7 @@ class RootUserController extends Controller
 
         $user = $this->createUseCase->execute($useCaseRequest);
 
-        $request->merge(['manipulated_entity' => 'userroot']);
-
         return $this->success(data: $user, message: 'Root user created successfully', code: 201);
-
     }
 
     public function update(RootUserUpdateRequest $request, string $id): JsonResponse
@@ -159,18 +151,12 @@ class RootUserController extends Controller
 
         $updatedUser = $this->updateUseCase->execute($useCaseRequest);
 
-        $request->merge(['manipulated_entity' => 'userroot']);
-
         return $this->success(data: $updatedUser, message: 'Root user updated successfully', code: 200);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        if (! Str::isUuid($id)) {
-            return response()->json(['message' => 'Not found'], 404);
-        }
-
-        $existingUser = $this->userRepository->findById($id);
+        $existingUser = $this->userRepository->existsById($id);
         if (! $existingUser) {
             return response()->json(['message' => 'Not found'], 404);
         }
@@ -185,12 +171,13 @@ class RootUserController extends Controller
                 userAgent: $request->userAgent(),
             ));
 
-            return response()->json(null, 204);
+            return $this->success(data: null, message: 'Root user deleted successfully', code: 204);
         } catch (SelfDeletionException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         } catch (LastActiveUserException $e) {
             return response()->json(['message' => $e->getMessage()], 409);
         }
+
     }
 
     public function deactivate(Request $request, string $id): JsonResponse
@@ -206,22 +193,7 @@ class RootUserController extends Controller
             return response()->json(['message' => $e->getMessage()], 409);
         }
 
-        $user->update(['is_active' => false]);
-
-        $actorId = $request->session()->get('admin_user_id');
-
-        $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
-            userId: $actorId,
-            action: 'root_user.deactivated',
-            entityType: 'root_user',
-            entityId: $id,
-            oldValues: ['is_active' => true],
-            newValues: ['is_active' => false],
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable,
-        ));
+        $this->userRepository->update($id, ['is_active' => false]);
 
         return response()->json(['message' => 'User deactivated']);
     }
@@ -233,22 +205,7 @@ class RootUserController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $user->update(['is_active' => true]);
-
-        $actorId = $request->session()->get('admin_user_id');
-
-        $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
-            userId: $actorId,
-            action: 'root_user.activated',
-            entityType: 'root_user',
-            entityId: $id,
-            oldValues: ['is_active' => false],
-            newValues: ['is_active' => true],
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable,
-        ));
+        $this->userRepository->update($id, ['is_active' => true]);
 
         return response()->json(['message' => 'User activated']);
     }
@@ -298,21 +255,6 @@ class RootUserController extends Controller
         }
 
         $user->update(['avatar_path' => $path]);
-
-        $actorId = $request->session()->get('admin_user_id');
-
-        $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
-            userId: $actorId,
-            action: 'root_user.avatar_updated',
-            entityType: 'root_user',
-            entityId: $id,
-            oldValues: null,
-            newValues: ['avatar_path' => $path],
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable,
-        ));
 
         return response()->json([
             'data' => [

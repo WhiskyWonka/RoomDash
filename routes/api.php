@@ -43,20 +43,20 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             // Root User CRUD
             Route::get('/root-users', [RootUserController::class, 'index']);
             Route::get('/root-users/{id}', [RootUserController::class, 'show']);
-            Route::post('/root-users', [RootUserController::class, 'store'])->middleware('audit.log');
-            Route::put('/root-users/{id}', [RootUserController::class, 'update'])->middleware('audit.log');
+            Route::post('/root-users', [RootUserController::class, 'store'])->middleware('audit.log:root_user,root_users');
+            Route::put('/root-users/{id}', [RootUserController::class, 'update'])->middleware('audit.log:root_user,root_users');
             // TODO: agregar /root-users/{id}/password para cambiar contraseña sin afectar email o rol
-            Route::delete('/root-users/{id}', [RootUserController::class, 'destroy']);
+            Route::delete('/root-users/{id}', [RootUserController::class, 'destroy'])->middleware('audit.log:root_user,root_users');
 
             // Root User Activation / Deactivation
-            Route::patch('/root-users/{id}/deactivate', [RootUserController::class, 'deactivate']);
-            Route::patch('/root-users/{id}/activate', [RootUserController::class, 'activate']);
+            Route::patch('/root-users/{id}/deactivate', [RootUserController::class, 'deactivate'])->middleware('audit.log:root_user,root_users');
+            Route::patch('/root-users/{id}/activate', [RootUserController::class, 'activate'])->middleware('audit.log:root_user,root_users');
 
             // Root User Resend Verification
             Route::post('/root-users/{id}/resend-verification', [RootUserController::class, 'resendVerification']);
 
             // Root User Avatar
-            Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar']);
+            Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar'])->middleware('audit.log:root_user,root_users');
             Route::delete('/root-users/{id}/avatar', [RootUserController::class, 'deleteAvatar']);
 
             // Audit Logs (read-only)
