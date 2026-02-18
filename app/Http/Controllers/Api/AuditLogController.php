@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use Application\AuditLog\DTOs\ListAuditLogsRequest;
 use Application\AuditLog\UseCases\ListAuditLogsUseCase;
@@ -14,6 +15,8 @@ use Illuminate\Support\Str;
 
 class AuditLogController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly ListAuditLogsUseCase $listAuditLogsUseCase,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
@@ -31,14 +34,16 @@ class AuditLogController extends Controller
             to: $request->query('to'),
         ));
 
-        return response()->json([
+        $data = [
             'data' => $result['data'],
             'meta' => [
                 'current_page' => $result['current_page'],
                 'per_page' => $result['per_page'],
                 'total' => $result['total'],
             ],
-        ]);
+        ];
+
+        return $this->success($data);
     }
 
     public function show(string $id): JsonResponse
@@ -53,8 +58,6 @@ class AuditLogController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        return response()->json([
-            'data' => $auditLog->jsonSerialize(),
-        ]);
+        return $this->success($auditLog);
     }
 }
