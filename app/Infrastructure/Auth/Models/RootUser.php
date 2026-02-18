@@ -89,6 +89,8 @@ class RootUser extends Model implements Authenticatable
             firstName: $this->first_name,
             lastName: $this->last_name,
             email: $this->email,
+            password: $this->password,
+            avatarPath: $this->avatar_path,
             isActive: $this->is_active,
             twoFactorEnabled: $this->two_factor_enabled,
             emailVerifiedAt: $this->email_verified_at

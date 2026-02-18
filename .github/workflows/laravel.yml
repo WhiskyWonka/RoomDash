@@ -1,0 +1,75 @@
+name: CI RoomDash - Architecture & Testing
+
+on:
+  push:
+    branches: [ "master", "develop" ]
+  pull_request:
+    branches: [ "master", "develop" ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      # Postgres 18.1 según tu entorno
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        # Usamos 8.5 para coincidir con tu entorno de producción/local
+        php-version: '8.5' 
+        extensions: mbstring, xml, ctype, iconv, pgsql, pdo_pgsql, intl
+        coverage: none
+        # Agregamos herramientas de composer
+        tools: composer:v2
+
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      run: |
+        echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    - name: Install Dependencies
+      run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    - name: Prepare Laravel Environment
+      run: |
+        cp .env.example .env
+        # Ajustamos el .env para usar Postgres en el CI
+        sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/g' .env
+        sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/g' .env
+        sed -i 's/DB_PORT=3306/DB_PORT=5432/g' .env
+        sed -i 's/DB_DATABASE=laravel/DB_DATABASE=testing/g' .env
+        sed -i 's/DB_USERNAME=root/DB_USERNAME=postgres/g' .env
+        sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/g' .env
+        php artisan key:generate
+
+    # 1. TEST DE ARQUITECTURA (Rápido y prioritario)
+    - name: Run Architecture Tests
+      run: ./vendor/bin/pest --group=architecture
+
+    # 2. TEST DE LÓGICA (Feature, Unit, Integration)
+    - name: Run All Tests
+      run: ./vendor/bin/pest --exclude-group=architecture

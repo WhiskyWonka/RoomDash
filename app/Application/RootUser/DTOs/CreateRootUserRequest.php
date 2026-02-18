@@ -12,6 +12,7 @@ final class CreateRootUserRequest
         public readonly string $lastName,
         public readonly string $email,
         public readonly string $actorId,
+        public readonly string $password,
         public readonly ?string $ipAddress = null,
         public readonly ?string $userAgent = null,
     ) {}

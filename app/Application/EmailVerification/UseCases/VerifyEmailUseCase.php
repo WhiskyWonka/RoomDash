@@ -9,13 +9,14 @@ use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
 use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
+use Domain\Shared\Ports\PasswordHasherInterface;
 
 class VerifyEmailUseCase
 {
     public function __construct(
         private readonly EmailVerificationTokenRepositoryInterface $tokenRepository,
         private readonly RootUserRepositoryInterface $userRepository,
+        private readonly PasswordHasherInterface $passwordHasher,
     ) {}
 
     /**
@@ -37,7 +38,7 @@ class VerifyEmailUseCase
         }
 
         // Set email as verified and set password
-        $hashedPassword = Hash::make($request->password);
+        $hashedPassword = $this->passwordHasher->hash($request->password);
         $this->userRepository->verifyEmail($token->userId, $hashedPassword);
 
         // Consume token

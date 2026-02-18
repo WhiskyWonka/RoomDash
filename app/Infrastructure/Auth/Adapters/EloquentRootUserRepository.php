@@ -6,6 +6,7 @@ namespace Infrastructure\Auth\Adapters;
 
 use Domain\Auth\Entities\RootUser as RootUserEntity;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Shared\DTOs\PaginatedResult;
 use Illuminate\Support\Facades\Hash;
 use Infrastructure\Auth\Models\RootUser;
 
@@ -30,6 +31,11 @@ class EloquentRootUserRepository implements RootUserRepositoryInterface
         return RootUser::where('is_active', true)->count();
     }
 
+    public function existsById(string $id): bool
+    {
+        return RootUser::where('id', $id)->exists();
+    }
+
     public function existsByEmail(string $email): bool
     {
         return RootUser::where('email', $email)->exists();
@@ -47,7 +53,7 @@ class EloquentRootUserRepository implements RootUserRepositoryInterface
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
-            'password' => null,
+            'password' => $data['password'],
             'is_active' => true,
             'email_verified_at' => null,
             'two_factor_enabled' => false,
@@ -166,5 +172,27 @@ class EloquentRootUserRepository implements RootUserRepositoryInterface
         $model->save();
 
         return true;
+    }
+
+    public function listPaginated(
+        int $page,
+        int $perPage,
+        string $sortField,
+        string $sortDirection
+    ): PaginatedResult {
+
+        // Whitelist de columnas permitidas para evitar errores
+        $allowedFields = ['username', 'email', 'created_at', 'is_active'];
+        $field = in_array($sortField, $allowedFields) ? $sortField : 'created_at';
+
+        // Validar dirección
+        $direction = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+
+        $resultModels = RootUser::orderBy($field, $direction)
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $result = $resultModels->map(fn (RootUser $model) => $model->toEntity());
+
+        return new PaginatedResult($result->toArray(), $resultModels->total(), $perPage, $page);
     }
 }

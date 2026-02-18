@@ -8,18 +8,19 @@ use Application\AuditLog\DTOs\RecordAuditLogRequest;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
-use Illuminate\Support\Str;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 
 class RecordAuditLogUseCase
 {
     public function __construct(
         private readonly AuditLogRepositoryInterface $auditLogRepository,
+        private readonly UuidGeneratorInterface $uuidGenerator,
     ) {}
 
     public function execute(RecordAuditLogRequest $request): void
     {
         $auditLog = new AuditLog(
-            id: Str::uuid()->toString(),
+            id: $this->uuidGenerator->generate(),
             userId: $request->actorId,
             action: $request->action,
             entityType: $request->entityType,
@@ -28,7 +29,7 @@ class RecordAuditLogUseCase
             newValues: $request->newValues,
             ipAddress: $request->ipAddress,
             userAgent: $request->userAgent,
-            createdAt: new DateTimeImmutable(),
+            createdAt: new DateTimeImmutable,
         );
 
         $this->auditLogRepository->create($auditLog);

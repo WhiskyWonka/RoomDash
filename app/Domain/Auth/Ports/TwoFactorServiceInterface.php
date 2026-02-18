@@ -24,7 +24,7 @@ interface TwoFactorServiceInterface
     /**
      * Generate recovery codes.
      *
-     * @return array<string>
+     * @return array{plain: array<string>, hashed: array<string>}
      */
     public function generateRecoveryCodes(int $count = 8): array;
 }
