@@ -53,7 +53,7 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             Route::patch('/root-users/{id}/activate', [RootUserController::class, 'activate'])->middleware('audit.log:root_user,root_users');
 
             // Root User Resend Verification
-            Route::post('/root-users/{id}/resend-verification', [RootUserController::class, 'resendVerification']);
+            Route::post('/root-users/{id}/resend-verification', [RootUserController::class, 'resendVerification'])->middleware('audit.log:root_user,root_users');
 
             // Root User Avatar
             Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar'])->middleware('audit.log:root_user,root_users');

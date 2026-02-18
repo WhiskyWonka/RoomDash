@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RootUser\RootUserStoreRequest;
 use App\Http\Requests\RootUser\RootUserUpdateRequest;
+use App\Http\Requests\RootUser\RootUserUploadAvatarRequest;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Application\EmailVerification\UseCases\ResendVerificationUseCase;
 use Application\RootUser\DTOs\CreateRootUserRequest;
@@ -27,10 +28,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-// use Illuminate\Support\Str;
-
-// use Infrastructure\Auth\Models\RootUser;
-// TODO: interface de documentacion swagger?
 class RootUserController extends Controller
 {
     use ApiResponse;
@@ -195,7 +192,7 @@ class RootUserController extends Controller
 
         $this->userRepository->update($id, ['is_active' => false]);
 
-        return response()->json(['message' => 'User deactivated']);
+        return $this->success(data: null, message: 'User deactivated', code: 200);
     }
 
     public function activate(Request $request, string $id): JsonResponse
@@ -207,7 +204,7 @@ class RootUserController extends Controller
 
         $this->userRepository->update($id, ['is_active' => true]);
 
-        return response()->json(['message' => 'User activated']);
+        return $this->success(data: null, message: 'User activated', code: 200);
     }
 
     public function resendVerification(Request $request, string $id): JsonResponse
@@ -225,36 +222,28 @@ class RootUserController extends Controller
                 actorId: $actorId,
             ));
 
-            return response()->json(['message' => 'Verification email sent']);
+            return $this->success(data: null, message: 'Verification email sent', code: 200);
         } catch (AlreadyVerifiedException $e) {
-            return response()->json(['message' => $e->getMessage()], 409);
+            return $this->error('User is already verified', code: 400);
         }
     }
 
-    public function uploadAvatar(Request $request, string $id): JsonResponse
+    public function uploadAvatar(RootUserUploadAvatarRequest $request, string $id): JsonResponse
     {
-        if (! Str::isUuid($id)) {
-            return response()->json(['message' => 'Not found'], 404);
-        }
-
         $user = $this->userRepository->findById($id);
         if (! $user) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $request->validate([
-            'avatar' => 'required|image|mimes:webp,png,jpg,jpeg|max:1024|dimensions:ratio=1/1',
-        ]);
-
         $file = $request->file('avatar');
         $path = $file->store('avatars', 'public');
 
         // Delete old avatar if exists
-        if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
+        if ($user->avatarPath) {
+            Storage::disk('public')->delete($user->avatarPath);
         }
 
-        $user->update(['avatar_path' => $path]);
+        $this->userRepository->update($id, ['avatar_path' => $path]);
 
         return response()->json([
             'data' => [
@@ -270,12 +259,12 @@ class RootUserController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
+        if ($user->avatarPath) {
+            Storage::disk('public')->delete($user->avatarPath);
         }
 
-        $user->update(['avatar_path' => null]);
+        $this->userRepository->update($id, ['avatar_path' => null]);
 
-        return response()->json(['message' => 'Avatar deleted']);
+        return $this->success(data: null, message: 'Avatar deleted', code: 200);
     }
 }
