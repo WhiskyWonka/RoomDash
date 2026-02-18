@@ -20,8 +20,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true)->after('avatar_path');
             $table->timestamp('email_verified_at')->nullable()->after('is_active');
 
-            // Make password nullable (new users won't have one until verification)
-            $table->string('password')->nullable()->change();
+            // Add password column (nullable — new users won't have one until verification)
+            $table->string('password')->nullable()->after('email');
 
             $table->index('is_active');
         });
@@ -31,8 +31,7 @@ return new class extends Migration
     {
         Schema::table('root_users', function (Blueprint $table) {
             $table->dropIndex(['is_active']);
-            $table->dropColumn(['username', 'first_name', 'last_name', 'avatar_path', 'is_active', 'email_verified_at']);
-            $table->string('password')->nullable(false)->change();
+            $table->dropColumn(['username', 'first_name', 'last_name', 'password', 'avatar_path', 'is_active', 'email_verified_at']);
         });
 
         Schema::rename('root_users', 'admin_users');
