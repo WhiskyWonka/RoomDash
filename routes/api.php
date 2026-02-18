@@ -30,10 +30,9 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
                 Route::post('/auth/verify-2fa', [LoginController::class, 'verify2fa']);
                 Route::post('/auth/verify-recovery', [LoginController::class, 'verifyRecoveryCode']);
                 Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm']);
+                Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup']);
+                Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
             });
-
-            Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup']);
-            Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
         });
 
         // Protected routes (requires 2FA verification)

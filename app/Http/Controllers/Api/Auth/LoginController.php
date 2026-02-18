@@ -8,6 +8,8 @@ use App\Docs\Endpoints\Api\Auth\LoginEndpoints;
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\Verify2FARequest;
+use App\Http\Requests\Auth\VerifyRecovery2FARequest;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
@@ -73,11 +75,9 @@ class LoginController extends Controller implements LoginEndpoints
         return $this->success($data, 'Login success', 200);
     }
 
-    public function verify2fa(Request $request): JsonResponse
+    public function verify2fa(Verify2FARequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
+        $data = $request->validated();
 
         $userId = $request->session()->get('admin_user_id');
         if (! $userId) {
@@ -112,17 +112,17 @@ class LoginController extends Controller implements LoginEndpoints
             createdAt: new DateTimeImmutable,
         ));
 
-        return response()->json([
+        $response_data = [
             'user' => $user,
             'verified' => true,
-        ]);
+        ];
+
+        return $this->success($response_data, '2FA verified successfully', 200);
     }
 
-    public function verifyRecoveryCode(Request $request): JsonResponse
+    public function verifyRecoveryCode(VerifyRecovery2FARequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => 'required|string',
-        ]);
+        $data = $request->validated();
 
         $userId = $request->session()->get('admin_user_id');
         if (! $userId) {
@@ -138,10 +138,12 @@ class LoginController extends Controller implements LoginEndpoints
 
         $user = $this->users->findById($userId);
 
-        return response()->json([
+        $response_data = [
             'user' => $user,
             'verified' => true,
-        ]);
+        ];
+
+        return $this->success($response_data, 'Recovery code verified successfully', 200);
     }
 
     public function logout(Request $request): JsonResponse

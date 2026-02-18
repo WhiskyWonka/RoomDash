@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Docs\Endpoints\Api\RootUserEndpoints;
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RootUser\RootUserStoreRequest;
@@ -28,7 +29,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class RootUserController extends Controller
+class RootUserController extends Controller implements RootUserEndpoints
 {
     use ApiResponse;
 

@@ -3,6 +3,8 @@
 namespace App\Docs\Endpoints\Api\Auth;
 
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\Verify2FARequest;
+use App\Http\Requests\Auth\VerifyRecovery2FARequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -62,7 +64,7 @@ interface LoginEndpoints
             ),
         ]
     )]
-    public function verify2fa(Request $request): JsonResponse;
+    public function verify2fa(Verify2FARequest $request): JsonResponse;
 
     #[OA\Post(
         path: '/auth/verify-recovery',
@@ -92,7 +94,7 @@ interface LoginEndpoints
             ),
         ]
     )]
-    public function verifyRecoveryCode(Request $request): JsonResponse;
+    public function verifyRecoveryCode(VerifyRecovery2FARequest $request): JsonResponse;
 
     #[OA\Post(
         path: '/auth/logout',
