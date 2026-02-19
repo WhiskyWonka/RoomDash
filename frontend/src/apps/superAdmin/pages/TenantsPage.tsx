@@ -16,7 +16,14 @@ export default function TenantsPage() {
     const [deleting, setDeleting] = useState<Tenant | null>(null);
 
     const load = () => {
-        tenantsApi.list().then(setTenants);
+        tenantsApi.list()
+        .then((response:any) => {
+            const tenantsArray = response.data || [];
+            setTenants(tenantsArray);
+        })
+        .catch((error) => {
+            console.error("CRITICAL_ERROR: API_REQUEST_FAILED", error);
+        });
     };
 
     useEffect(load, []);

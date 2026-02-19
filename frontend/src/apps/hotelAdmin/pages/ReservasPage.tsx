@@ -1,70 +1,108 @@
-import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar"
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { es } from "date-fns/locale"
-import "react-big-calendar/lib/css/react-big-calendar.css"
-//import "../../../../styles/calendar-custom.css"
-import "@/styles/calendar-custom.css"
+"use client"
 
-const locales = {
-  "es": es,
-}
+import React, { useState } from "react"
+import { ChevronLeft, ChevronRight, Home, Clock } from "lucide-react"
+import { Button } from "@/components/ui/shadcn/button"
 
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-})
+const HABITACIONES = [
+  { id: 101, nombre: "Hab. 101" },
+  { id: 102, nombre: "Hab. 102" },
+  { id: 103, nombre: "Suite 201" },
+  { id: 104, nombre: "Hab. 202" },
+];
 
-// 1. Las Habitaciones (Resources)
-const myResources = [
-  { id: 1, title: "Hab. 101 - Simple" },
-  { id: 2, title: "Hab. 102 - Doble" },
-  { id: 3, title: "Suite 201" },
-]
+// Generar slots de media hora: ["00:00", "00:30", ..., "23:30"]
+const GENERAR_HORAS = () => {
+  const slots = [];
+  for (let i = 0; i < 24; i++) {
+    const hora = i.toString().padStart(2, '0');
+    slots.push(`${hora}:00`);
+    slots.push(`${hora}:30`);
+  }
+  return slots;
+};
 
-// 2. Las Reservas (Events)
-const myEvents = [
-  {
-    id: 0,
-    title: "Reserva Familia Pérez",
-    start: new Date(2026, 1, 9, 10, 0), // 9 de Feb, 10:00 AM
-    end: new Date(2026, 1, 12, 14, 0),
-    resourceId: 1,
-  },
-  {
-    id: 1,
-    title: "John Doe",
-    start: new Date(2026, 1, 10, 12, 0),
-    end: new Date(2026, 1, 15, 11, 0),
-    resourceId: 2,
-  },
-]
+const SLOTS_HORA = GENERAR_HORAS();
+
 export default function ReservasPage() {
-    return (
-        <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:gap-4 md:p-6">
-            <div className="h-[600px] rounded-xl border bg-card p-4 shadow-sm">
-                <Calendar
-                    localizer={localizer}
-                    events={myEvents}
-                    resources={myResources}
-                    resourceIdAccessor="id"
-                    resourceTitleAccessor="title"
-                    defaultView={Views.DAY} // Vista de día para ver los recursos
-                    views={['day', 'work_week']} // Limitamos las vistas
-                    step={60}
-                    defaultDate={new Date(2026, 1, 9)}
-                    style={{ height: "100%" }}
-                    messages={{
-                        next: "Sig.",
-                        previous: "Ant.",
-                        today: "Hoy",
-                        day: "Día",
-                        work_week: "Semana",
-                    }}
-                />
-            </div>
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
+
+  const cambiarDia = (offset: number) => {
+    const nuevaFecha = new Date(fechaSeleccionada);
+    nuevaFecha.setDate(nuevaFecha.getDate() + offset);
+    setFechaSeleccionada(nuevaFecha);
+  };
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 p-4 md:p-8 h-screen">
+      
+      {/* NAVEGACIÓN DE FECHA */}
+      <div className="flex items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
+        <Button variant="outline" onClick={() => cambiarDia(-1)} className="gap-2">
+          <ChevronLeft className="h-4 w-4" /> Día anterior
+        </Button>
+        
+        <div className="text-center">
+          <h2 className="text-xl font-bold capitalize">
+            {fechaSeleccionada.toLocaleDateString('es-AR', { dateStyle: 'full' })}
+          </h2>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest">Vista Diaria de Operaciones</p>
         </div>
-    );
+
+        <Button variant="outline" onClick={() => cambiarDia(1)} className="gap-2">
+          Día posterior <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* GRILLA DE HORARIOS */}
+      <div className="flex-1 rounded-xl border bg-card shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-auto flex-1">
+          <div 
+            className="inline-grid" 
+            style={{ 
+              gridTemplateColumns: `150px repeat(${SLOTS_HORA.length}, 80px)`,
+            }}
+          >
+            {/* Esquina superior izquierda vacía/Habitación */}
+            <div className="sticky top-0 left-0 z-30 bg-muted/90 backdrop-blur-sm p-4 border-b border-r font-bold flex items-center gap-2">
+              <Home className="h-4 w-4" /> Recursos
+            </div>
+
+            {/* HEADER DE HORAS (Sticky top) */}
+            {SLOTS_HORA.map((hora) => (
+              <div 
+                key={hora} 
+                className="sticky top-0 z-20 bg-muted/90 backdrop-blur-sm p-3 border-b border-r text-center text-[11px] font-mono font-semibold"
+              >
+                {hora}
+              </div>
+            ))}
+
+            {/* FILAS DE HABITACIONES */}
+            {HABITACIONES.map((hab) => (
+              <React.Fragment key={hab.id}>
+                {/* Nombre de Habitación (Sticky left) */}
+                <div className="sticky left-0 z-10 bg-card p-4 border-b border-r text-sm font-medium flex items-center shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                  {hab.nombre}
+                </div>
+
+                {/* Celdas de tiempo (Media hora) */}
+                {SLOTS_HORA.map((slot) => (
+                  <div 
+                    key={slot} 
+                    className="h-14 border-b border-r border-border/40 hover:bg-primary/5 transition-colors cursor-crosshair relative group"
+                  >
+                    {/* Guía visual sutil para los cuartos de hora o divisiones */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
+                      <span className="text-[10px] text-primary font-bold">+</span>
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

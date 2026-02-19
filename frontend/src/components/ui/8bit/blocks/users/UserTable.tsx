@@ -26,7 +26,11 @@ export function UsersTable({ users, onEdit, onDelete }: Props) {
             <TableBody>
                 {users.map((t) => (
                     <TableRow key={t.id}>
-                        <TableCell className="font-medium">{t.username}</TableCell>
+                        <TableCell className="font-medium">
+                            {typeof t.username === 'string' && t.username.length > 0 
+                                ? t.username 
+                                : `user_${t.id.substring(0, 5)}`}
+                        </TableCell>
                         <TableCell>{t.email}</TableCell>
                         <TableCell>{new Date(t.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="flex justify-end gap-4">

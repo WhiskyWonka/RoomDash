@@ -59,19 +59,40 @@ class LoginController extends Controller implements LoginEndpoints
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($rootUser->id);
 
-        $is2FaPending = $rootUser->twoFactorEnabled;
+        //$is2FaPending = $rootUser->twoFactorEnabled;
+        // Siempre va a estar enabled para root admins
+        $is2FaPending = true;
 
         $request->session()->put('2fa_pending', $is2FaPending);
         $request->session()->put('admin_user_id', $rootUser->id);
+
+        $secret = $this->users->getTwoFactorSecret($rootUser->id);
+
+        if (!$rootUser->twoFactorEnabled || !$secret) {
+            if (!$secret) {
+                $secret = $this->twoFactor->generateSecret();
+                $this->users->setTwoFactorSecret($rootUser->id, $secret);
+            }
+
+            return $this->success([
+                'user' => $rootUser->jsonSerialize(),
+                'twoFactorRequired' => true,
+                'requiresSetup' => true,
+                'qr_code_url' => $this->twoFactor->generateQrCodeDataUri($secret, $rootUser->email),
+                'secret' => $secret,
+            ], '2FA Setup Required');
+        }
 
         // TODO: ver si aca hay que registrar un log de "login attempt" exitoso, y luego otro log en verify2fa de "login successful"
 
         $data = [
             'user' => $rootUser->jsonSerialize(),
-            'twoFactorEnabled' => $rootUser->twoFactorEnabled,
-            'requiresTwoFactorSetup' => ! $rootUser->twoFactorEnabled,
+            'twoFactorRequired' => true,
+            'requiresSetup' => false, // IMPORTANTE: Mismo nombre que arriba
+            'qr_code_url' => null,
+            'secret' => null,
         ];
-
+        
         return $this->success($data, 'Login success', 200);
     }
 

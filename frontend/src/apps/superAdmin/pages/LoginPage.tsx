@@ -20,23 +20,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             
             console.log("DEBUG_RESPONSE_FULL:", response);
 
-            // El backend debe responder algo como: 
-            // { twoFactorRequired: true, has2FA: false, qr_code: '...', secret: '...' }
-            if (response.twoFactorRequired) {
-                setShow2FA(true);
-                
-                // Si el usuario NO tiene el 2FA configurado todavía, guardamos el QR
-                /*if (response.has2FA === false) {
-                    setQrData({
-                        qr_code_url: response.qr_code_url, // Asegúrate que coincida con tu JSON de Laravel
-                        secret: response.secret
-                    });
-                }*/
+            const result = response.data;
 
-                if (response.requiresSetup && response.qr_code_url) {
+            if (result && result.twoFactorRequired) {
+                setShow2FA(true);
+
+                if (result.requiresSetup && result.qr_code_url) {
                     setQrData({
-                        qr_code_url: response.qr_code_url,
-                        secret: response.secret
+                        qr_code_url: result.qr_code_url,
+                        secret: result.secret
                     });
                 } else {
                     setQrData(null);

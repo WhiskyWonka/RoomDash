@@ -21,15 +21,8 @@ export default function UsersPage() {
     const load = () => {
         rootUsersApi.list()
             .then((response: any) => {
-                const usersArray = response.data || [];
-                
-                // Si tu componente espera "name" pero el backend manda firstName/lastName, 
-                // puedes normalizarlo aquí:
-                /*const normalizedUsers = usersArray.map((u: any) => ({
-                    ...u,
-                    name: u.name || `${u.firstName} ${u.lastName}`, // Fallback por si acaso
-                }));*/
-
+                console.log("LOAD_USERS_RESPONSE:", response);
+                const usersArray = response.data?.users || [];
                 setUsers(usersArray);
             })
             .catch(err => {
