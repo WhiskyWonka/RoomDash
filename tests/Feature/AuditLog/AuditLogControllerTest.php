@@ -29,7 +29,7 @@ it('returns 403 with 2FA_REQUIRED when 2fa not verified for audit logs', functio
 
     // Assert
     $response->assertStatus(403)
-        ->assertJson(['code' => '2FA_REQUIRED']);
+        ->assertJson(['errors' => ['code' => '2FA_REQUIRED']]);
 });
 
 // =========================================================================

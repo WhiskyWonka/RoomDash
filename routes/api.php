@@ -16,21 +16,21 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
 
         // Public auth routes with rate limiting
         Route::middleware(['web', 'throttle:login'])->group(function () {
-            Route::post('/auth/login', [LoginController::class, 'login']);
-            Route::post('/auth/verify-email', VerifyEmailController::class);
+            Route::post('/auth/login', [LoginController::class, 'login'])->middleware('audit.log:root_user,root_users');
+            Route::post('/auth/verify-email', VerifyEmailController::class)->middleware('audit.log:root_user,root_users');
         });
 
         // Authenticated routes (no 2FA required yet)
         Route::middleware('web')->group(function () {
-            Route::post('/auth/logout', [LoginController::class, 'logout']);
+            Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware('audit.log:root_user,root_users');
             Route::get('/auth/me', [LoginController::class, 'me']);
 
             // 2FA verification with rate limiting
             Route::middleware('throttle:2fa')->group(function () {
-                Route::post('/auth/verify-2fa', [LoginController::class, 'verify2fa']);
-                Route::post('/auth/verify-recovery', [LoginController::class, 'verifyRecoveryCode']);
-                Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm']);
-                Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup']);
+                Route::post('/auth/verify-2fa', [LoginController::class, 'verify2fa'])->middleware('audit.log:root_user,root_users');
+                Route::post('/auth/verify-recovery', [LoginController::class, 'verifyRecoveryCode'])->middleware('audit.log:root_user,root_users');
+                Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('audit.log:root_user,root_users');
+                Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup'])->middleware('audit.log:root_user,root_users');
                 Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
             });
         });
@@ -56,7 +56,7 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
 
             // Root User Avatar
             Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar'])->middleware('audit.log:root_user,root_users');
-            Route::delete('/root-users/{id}/avatar', [RootUserController::class, 'deleteAvatar']);
+            Route::delete('/root-users/{id}/avatar', [RootUserController::class, 'deleteAvatar'])->middleware('audit.log:root_user,root_users');
 
             // Audit Logs (read-only)
             Route::get('/audit-logs', [AuditLogController::class, 'index']);

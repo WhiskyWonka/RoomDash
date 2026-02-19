@@ -20,9 +20,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true)->after('avatar_path');
             $table->timestamp('email_verified_at')->nullable()->after('is_active');
 
-            // Add password column (nullable — new users won't have one until verification)
-            $table->string('password')->nullable()->after('email');
-
             $table->index('is_active');
         });
     }
