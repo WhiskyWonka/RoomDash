@@ -19,6 +19,7 @@ class AuditLogger
         'destroy' => 'deleted',
         'deactivate' => 'deactivated',
         'activate' => 'activated',
+        'changePassword' => 'password_changed',
         'uploadAvatar' => 'avatar_updated',
         'deleteAvatar' => 'avatar_deleted',
     ];

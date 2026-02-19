@@ -2,6 +2,7 @@
 
 namespace App\Docs\Endpoints\Api;
 
+use App\Http\Requests\RootUser\RootUserChangePasswordRequest;
 use App\Http\Requests\RootUser\RootUserStoreRequest;
 use App\Http\Requests\RootUser\RootUserUpdateRequest;
 use App\Http\Requests\RootUser\RootUserUploadAvatarRequest;
@@ -215,6 +216,56 @@ interface RootUserEndpoints
         ]
     )]
     public function destroy(Request $request, string $id): JsonResponse;
+
+    #[OA\Patch(
+        path: '/root-users/{id}/password',
+        summary: 'Change root user password',
+        description: 'Changes a root user\'s password. When changing own password, current_password is required.',
+        operationId: 'changeRootUserPassword',
+        tags: ['Root Users'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['password', 'password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'current_password', type: 'string', format: 'password', description: 'Required when changing own password'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', minLength: 8, example: 'N3wS3cur3P@ss!'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', example: 'N3wS3cur3P@ss!'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Password changed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Password changed successfully'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Current password is incorrect',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Root user not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+        ]
+    )]
+    public function changePassword(RootUserChangePasswordRequest $request, string $id): JsonResponse;
 
     #[OA\Patch(
         path: '/root-users/{id}/deactivate',
