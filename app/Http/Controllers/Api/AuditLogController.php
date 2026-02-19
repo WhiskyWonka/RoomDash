@@ -35,7 +35,7 @@ class AuditLogController extends Controller
         ));
 
         $data = [
-            'data' => $result['data'],
+            'items' => $result['data'],
             'meta' => [
                 'current_page' => $result['current_page'],
                 'per_page' => $result['per_page'],

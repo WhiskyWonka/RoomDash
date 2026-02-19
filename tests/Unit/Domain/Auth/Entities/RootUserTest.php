@@ -10,6 +10,7 @@ it('creates root user with valid data', function () {
     $id = 'user-uuid-1234';
     $username = new Username('jdoe');
     $email = 'john@example.com';
+    $password = 'Hola1lu234!';
 
     // Act
     $user = new RootUser(
@@ -18,20 +19,24 @@ it('creates root user with valid data', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: $email,
+        password: $password,
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
         emailVerifiedAt: null,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Assert
     expect($user->id)->toBe($id);
     expect($user->username->value())->toBe('jdoe');
     expect($user->email)->toBe($email);
+    expect($user->password)->toBe($password);
     expect($user->firstName)->toBe('John');
     expect($user->lastName)->toBe('Doe');
     expect($user->isActive)->toBeTrue();
+    expect($user->avatarPath)->toBe(null);
     expect($user->twoFactorEnabled)->toBeFalse();
     expect($user->emailVerifiedAt)->toBeNull();
 });
@@ -47,7 +52,9 @@ it('serializes root user to json correctly', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: true,
         emailVerifiedAt: $verifiedAt,
         twoFactorConfirmedAt: null,
@@ -77,11 +84,13 @@ it('detects active root user', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
         emailVerifiedAt: null,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Assert
@@ -96,11 +105,13 @@ it('detects inactive root user', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: false,
+        avatarPath: null,
         twoFactorEnabled: false,
         emailVerifiedAt: null,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Assert
@@ -115,11 +126,13 @@ it('detects unverified email', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
         emailVerifiedAt: null,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Assert
@@ -135,11 +148,13 @@ it('detects verified email', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
         emailVerifiedAt: new DateTimeImmutable('2026-01-01'),
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Assert
@@ -156,11 +171,13 @@ it('prevents self deletion', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Act & Assert
@@ -178,11 +195,13 @@ it('allows deleting a different user', function () {
         firstName: 'Target',
         lastName: 'User',
         email: 'target@example.com',
+        password: 'Hola1lu234!',
         isActive: true,
+        avatarPath: null,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     // Act & Assert -- should not throw

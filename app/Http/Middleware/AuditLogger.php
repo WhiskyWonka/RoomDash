@@ -61,7 +61,7 @@ class AuditLogger
         $action = "{$entityType}.{$actionVerb}";
 
         $oldValues = $request->attributes->get('old_values');
-        $entityId = $request->route('id') ?? 'N/A';
+        $entityId = $request->route('id') ?? null;
         $newValues = null;
 
         if ($statusCode !== 204) {
@@ -75,7 +75,7 @@ class AuditLogger
 
         $this->auditLogRepository->create(new AuditLog(
             id: $this->uuidGenerator->generate(),
-            userId: $request->session()->get('admin_user_id') ?? 'system',
+            userId: $request->session()->get('admin_user_id') ?? null,
             action: $action,
             entityType: $entityType,
             entityId: $entityId,

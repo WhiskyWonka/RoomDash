@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\Verify2FARequest;
 use App\Http\Requests\Auth\VerifyRecovery2FARequest;
+use Application\Login\DTOs\CreateLoginReesponse;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
@@ -21,8 +22,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Infrastructure\Auth\Adapters\EloquentRootUserRepository;
 use Infrastructure\Shared\Adapters\LaravelPasswordHasher;
-
-// use Infrastructure\Auth\Models\RootUser;
 
 class LoginController extends Controller implements LoginEndpoints
 {
@@ -59,40 +58,19 @@ class LoginController extends Controller implements LoginEndpoints
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($rootUser->id);
 
-        //$is2FaPending = $rootUser->twoFactorEnabled;
-        // Siempre va a estar enabled para root admins
-        $is2FaPending = true;
-
-        $request->session()->put('2fa_pending', $is2FaPending);
+        $request->session()->put('2fa_verificated', false);
         $request->session()->put('admin_user_id', $rootUser->id);
 
-        $secret = $this->users->getTwoFactorSecret($rootUser->id);
+        $notConfirmed = $rootUser->twoFactorConfirmedAt ? false : true;
 
-        if (!$rootUser->twoFactorEnabled || !$secret) {
-            if (!$secret) {
-                $secret = $this->twoFactor->generateSecret();
-                $this->users->setTwoFactorSecret($rootUser->id, $secret);
-            }
+        if ($notConfirmed) {
+            $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, true);
 
-            return $this->success([
-                'user' => $rootUser->jsonSerialize(),
-                'twoFactorRequired' => true,
-                'requiresSetup' => true,
-                'qr_code_url' => $this->twoFactor->generateQrCodeDataUri($secret, $rootUser->email),
-                'secret' => $secret,
-            ], '2FA Setup Required');
+            return $this->success($data, '2FA Setup Required');
         }
 
-        // TODO: ver si aca hay que registrar un log de "login attempt" exitoso, y luego otro log en verify2fa de "login successful"
+        $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, false);
 
-        $data = [
-            'user' => $rootUser->jsonSerialize(),
-            'twoFactorRequired' => true,
-            'requiresSetup' => false, // IMPORTANTE: Mismo nombre que arriba
-            'qr_code_url' => null,
-            'secret' => null,
-        ];
-        
         return $this->success($data, 'Login success', 200);
     }
 
@@ -114,24 +92,23 @@ class LoginController extends Controller implements LoginEndpoints
             return response()->json(['message' => 'Invalid code'], 401);
         }
 
-        $request->session()->forget('2fa_pending');
         $request->session()->put('2fa_verified', true);
 
         $user = $this->users->findById($userId);
 
         // Record audit log for successful login after 2FA
-        $this->auditLogRepository->create(new AuditLog(
-            id: Str::uuid()->toString(),
-            userId: $userId,
-            action: 'auth.login',
-            entityType: null,
-            entityId: null,
-            oldValues: null,
-            newValues: null,
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable,
-        ));
+        // $this->auditLogRepository->create(new AuditLog(
+        //     id: Str::uuid()->toString(),
+        //     userId: $userId,
+        //     action: 'auth.login',
+        //     entityType: null,
+        //     entityId: null,
+        //     oldValues: null,
+        //     newValues: null,
+        //     ipAddress: $request->ip(),
+        //     userAgent: $request->userAgent(),
+        //     createdAt: new DateTimeImmutable,
+        // ));
 
         $response_data = [
             'user' => $user,
