@@ -1,4 +1,4 @@
-import type { User } from "@/types/user";
+import type { RootUser as User } from "@/types/rootUser";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
 import { Button } from "@/components/ui/8bit/button";
 
@@ -16,7 +16,7 @@ export function DeleteUserDialog({ open, user, onClose, onConfirm }: Props) {
         <DialogHeader>
           <DialogTitle>Delete User</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete <strong>{user?.name}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{user?.username}</strong>? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

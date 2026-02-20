@@ -57,3 +57,16 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Local deploy
+
+### run migrations
+
+./vendor/bin/sail artisan migrate
+
+### Create first root user
+
+./vendor/bin/sail artisan db:seed --class=RootUserSeeder
+
+email: admin@roomdash.local
+password: password 

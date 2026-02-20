@@ -4,103 +4,80 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Docs\Endpoints\Api\Auth\LoginEndpoints;
+use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
-use Domain\Auth\Ports\AdminUserRepositoryInterface;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\Verify2FARequest;
+use App\Http\Requests\Auth\VerifyRecovery2FARequest;
+use Application\Login\DTOs\CreateLoginReesponse;
+use DateTimeImmutable;
+use Domain\AuditLog\Entities\AuditLog;
+use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use OpenApi\Attributes as OA;
+use Illuminate\Support\Str;
+use Infrastructure\Auth\Adapters\EloquentRootUserRepository;
+use Infrastructure\Shared\Adapters\LaravelPasswordHasher;
 
-class LoginController extends Controller
+class LoginController extends Controller implements LoginEndpoints
 {
+    use ApiResponse;
+
     public function __construct(
-        private readonly AdminUserRepositoryInterface $users,
+        private readonly RootUserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
+        private readonly AuditLogRepositoryInterface $auditLogRepository,
+        private readonly EloquentRootUserRepository $rootUserRepository,
+        private readonly LaravelPasswordHasher $hasherService,
     ) {}
 
-    #[OA\Post(
-        path: '/auth/login',
-        summary: 'Login with email and password',
-        description: 'Authenticates an admin user and initiates 2FA flow',
-        operationId: 'login',
-        tags: ['Authentication'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/LoginRequest')
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Login successful',
-                content: new OA\JsonContent(ref: '#/components/schemas/LoginResponse')
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Invalid credentials',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-            new OA\Response(
-                response: 429,
-                description: 'Too many login attempts',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-        ]
-    )]
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        // Check if user exists with this email before verifying password
+        // We need the Eloquent model to check is_active and email_verified_at
+        $rootUser = $this->rootUserRepository->findByEmail($request['email']);
 
-        $user = $this->users->verifyPassword($data['email'], $data['password']);
-
-        if (! $user) {
+        if (! $rootUser || ! $rootUser->password || ! $this->hasherService->check($request['password'], $rootUser->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
+        // Check if email is verified (BR-009)
+        if ($rootUser->emailVerifiedAt === null) {
+            return $this->error('Email not verified', 403, ['code' => 'EMAIL_NOT_VERIFIED']);
+        }
+
+        // Check if account is active (BR-008)
+        if (! $rootUser->isActive) {
+            return $this->error('Account deactivated', 403, ['code' => 'ACCOUNT_DEACTIVATED']);
+        }
+
         $request->session()->regenerate();
-        Auth::guard('admin')->loginUsingId($user->id);
+        Auth::guard('admin')->loginUsingId($rootUser->id);
 
+        $request->session()->put('2fa_verified', false);
+        $request->session()->put('admin_user_id', $rootUser->id);
         $request->session()->put('2fa_pending', true);
-        $request->session()->put('admin_user_id', $user->id);
 
-        return response()->json([
-            'user' => $user,
-            'twoFactorEnabled' => $user->twoFactorEnabled,
-            'requiresTwoFactorSetup' => ! $user->twoFactorEnabled,
-        ]);
+        $notConfirmed = $rootUser->twoFactorConfirmedAt ? false : true;
+
+        if ($notConfirmed) {
+            $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, true);
+
+            return $this->success($data, '2FA Setup Required');
+        }
+
+        $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, false);
+
+        return $this->success($data, 'Login success', 200);
     }
 
-    #[OA\Post(
-        path: '/auth/verify-2fa',
-        summary: 'Verify 2FA code',
-        description: 'Verifies the 6-digit TOTP code from authenticator app',
-        operationId: 'verify2fa',
-        tags: ['Authentication'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/Verify2faRequest')
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Verification successful',
-                content: new OA\JsonContent(ref: '#/components/schemas/Verify2faResponse')
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Invalid code or not authenticated',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-        ]
-    )]
-    public function verify2fa(Request $request): JsonResponse
+    public function verify2fa(Verify2FARequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
+        $data = $request->validated();
 
         $userId = $request->session()->get('admin_user_id');
         if (! $userId) {
@@ -116,50 +93,22 @@ class LoginController extends Controller
             return response()->json(['message' => 'Invalid code'], 401);
         }
 
-        $request->session()->forget('2fa_pending');
         $request->session()->put('2fa_verified', true);
+        $request->session()->put('2fa_pending', false);
 
         $user = $this->users->findById($userId);
 
-        return response()->json([
+        $response_data = [
             'user' => $user,
             'verified' => true,
-        ]);
+        ];
+
+        return $this->success($response_data, '2FA verified successfully', 200);
     }
 
-    #[OA\Post(
-        path: '/auth/verify-recovery',
-        summary: 'Verify recovery code',
-        description: 'Uses a one-time recovery code to authenticate',
-        operationId: 'verifyRecoveryCode',
-        tags: ['Authentication'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['code'],
-                properties: [
-                    new OA\Property(property: 'code', type: 'string', example: 'ABCD-EFGH'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Verification successful',
-                content: new OA\JsonContent(ref: '#/components/schemas/Verify2faResponse')
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Invalid code or not authenticated',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-        ]
-    )]
-    public function verifyRecoveryCode(Request $request): JsonResponse
+    public function verifyRecoveryCode(VerifyRecovery2FARequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => 'required|string',
-        ]);
+        $data = $request->validated();
 
         $userId = $request->session()->get('admin_user_id');
         if (! $userId) {
@@ -175,32 +124,34 @@ class LoginController extends Controller
 
         $user = $this->users->findById($userId);
 
-        return response()->json([
+        $response_data = [
             'user' => $user,
             'verified' => true,
-        ]);
+        ];
+
+        return $this->success($response_data, 'Recovery code verified successfully', 200);
     }
 
-    #[OA\Post(
-        path: '/auth/logout',
-        summary: 'Logout',
-        description: 'Invalidates the current session',
-        operationId: 'logout',
-        tags: ['Authentication'],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Logged out successfully',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Logged out'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function logout(Request $request): JsonResponse
     {
+        $userId = $request->session()->get('admin_user_id');
+
+        // Record audit log before session invalidation
+        if ($userId) {
+            $this->auditLogRepository->create(new AuditLog(
+                id: Str::uuid()->toString(),
+                userId: $userId,
+                action: 'auth.logout',
+                entityType: null,
+                entityId: null,
+                oldValues: null,
+                newValues: null,
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent(),
+                createdAt: new DateTimeImmutable,
+            ));
+        }
+
         Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -208,25 +159,6 @@ class LoginController extends Controller
         return response()->json(['message' => 'Logged out']);
     }
 
-    #[OA\Get(
-        path: '/auth/me',
-        summary: 'Get current user',
-        description: 'Returns the currently authenticated user and their 2FA status',
-        operationId: 'me',
-        tags: ['Authentication'],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Current user information',
-                content: new OA\JsonContent(ref: '#/components/schemas/MeResponse')
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Not authenticated',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-        ]
-    )]
     public function me(Request $request): JsonResponse
     {
         $userId = $request->session()->get('admin_user_id');

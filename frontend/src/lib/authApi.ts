@@ -22,5 +22,38 @@ export const authApi = {
     logout: () =>
         request<void>(`${AUTH_BASE}/logout`, { method: "POST" }),
 
-    me: () => request<any>(`${AUTH_BASE}/me`)
+    me: () => 
+        request<any>(`${AUTH_BASE}/me`),
+
+    // Solo para validar si el link es usable al cargar la página
+    checkVerificationToken: (token: string) =>
+        request<any>(`${AUTH_BASE}/check-token/${token}`, {
+            method: "GET",
+        }),
+
+    setup2FA: () => request<any>("/api/auth/2fa/setup"),
+
+    confirm2FA: (code: string) =>
+        request<any>(`${AUTH_BASE}/2fa/confirm`, {
+            method: "POST",
+            body: JSON.stringify({ code }),
+        }),
+
+    // La acción definitiva que marca el email como verificado y setea pass
+    verifyEmail: (data: { 
+        token: string; 
+        password: string; 
+        password_confirmation: string 
+    }) =>
+        request<any>(`${AUTH_BASE}/verify-email`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    // Por si el token expiró y el usuario necesita otro
+    resendVerificationEmail: (email: string) =>
+        request<any>(`${AUTH_BASE}/resend-verification`, {
+            method: "POST",
+            body: JSON.stringify({ email }),
+        }),
 };

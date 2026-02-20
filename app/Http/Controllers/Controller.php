@@ -132,6 +132,38 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'twoFactorPending', type: 'boolean', example: false),
     ]
 )]
+#[OA\Schema(
+    schema: 'RootUserSummary',
+    type: 'object',
+    required: ['id', 'username', 'firstName', 'lastName', 'email', 'isActive', 'createdAt'],
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'),
+        new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
+        new OA\Property(property: 'firstName', type: 'string', example: 'John'),
+        new OA\Property(property: 'lastName', type: 'string', example: 'Doe'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
+        new OA\Property(property: 'avatarUrl', type: 'string', format: 'uri', nullable: true, example: '/storage/avatars/abc123.jpg'),
+        new OA\Property(property: 'isActive', type: 'boolean', example: true),
+        new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2025-02-02 22:49:00'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'RootUserDetail',
+    type: 'object',
+    required: ['id', 'username', 'firstName', 'lastName', 'email', 'isActive', 'twoFactorEnabled', 'createdAt'],
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'),
+        new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
+        new OA\Property(property: 'firstName', type: 'string', example: 'John'),
+        new OA\Property(property: 'lastName', type: 'string', example: 'Doe'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
+        new OA\Property(property: 'avatarUrl', type: 'string', format: 'uri', nullable: true, example: '/storage/avatars/abc123.jpg'),
+        new OA\Property(property: 'isActive', type: 'boolean', example: true),
+        new OA\Property(property: 'emailVerifiedAt', type: 'string', format: 'date-time', nullable: true, example: '2025-02-02 22:49:00'),
+        new OA\Property(property: 'twoFactorEnabled', type: 'boolean', example: false),
+        new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2025-02-02 22:49:00'),
+    ]
+)]
 abstract class Controller
 {
     //

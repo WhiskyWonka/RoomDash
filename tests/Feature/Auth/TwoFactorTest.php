@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-use Domain\Auth\Ports\TwoFactorServiceInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Infrastructure\Auth\Models\AdminUser;
+use Infrastructure\Auth\Models\RootUser;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    AdminUser::create([
+    RootUser::factory()->create([
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
+        'email_verified_at' => now(),
+        'is_active' => true,
         'two_factor_enabled' => false,
     ]);
 });
@@ -26,15 +27,15 @@ test('user can get 2fa setup', function () {
     $response = $this->getJson('/api/auth/2fa/setup');
 
     $response->assertStatus(200)
-        ->assertJsonStructure(['secret', 'qrCode']);
+        ->assertJsonStructure(['data' => ['secret', 'qrCode']]);
 });
 
 test('user can confirm 2fa setup with valid code', function () {
-    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+    $google2fa = new \PragmaRX\Google2FA\Google2FA;
     $secret = $google2fa->generateSecretKey();
 
     // Pre-set the secret so we know what it is
-    $user = AdminUser::first();
+    $user = RootUser::first();
     $user->two_factor_secret = $secret;
     $user->save();
 
@@ -50,17 +51,17 @@ test('user can confirm 2fa setup with valid code', function () {
     ]);
 
     $response->assertStatus(200)
-        ->assertJsonStructure(['recoveryCodes', 'enabled'])
-        ->assertJson(['enabled' => true]);
+        ->assertJsonStructure(['data' => ['recoveryCodes', 'enabled']])
+        ->assertJson(['data' => ['enabled' => true]]);
 
-    expect($response->json('recoveryCodes'))->toHaveCount(8);
+    expect($response->json('data.recoveryCodes'))->toHaveCount(8);
 });
 
 test('user cannot confirm 2fa with invalid code', function () {
-    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+    $google2fa = new \PragmaRX\Google2FA\Google2FA;
     $secret = $google2fa->generateSecretKey();
 
-    $user = AdminUser::first();
+    $user = RootUser::first();
     $user->two_factor_secret = $secret;
     $user->save();
 
@@ -78,10 +79,10 @@ test('user cannot confirm 2fa with invalid code', function () {
 });
 
 test('user with 2fa can verify code', function () {
-    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+    $google2fa = new \PragmaRX\Google2FA\Google2FA;
     $secret = $google2fa->generateSecretKey();
 
-    $user = AdminUser::first();
+    $user = RootUser::first();
     $user->two_factor_secret = $secret;
     $user->two_factor_enabled = true;
     $user->two_factor_confirmed_at = now();
@@ -103,7 +104,7 @@ test('user with 2fa can verify code', function () {
     ]);
 
     $response->assertStatus(200)
-        ->assertJson(['verified' => true]);
+        ->assertJson(['data' => ['verified' => true]]);
 });
 
 test('tenants api requires 2fa verification', function () {
@@ -115,5 +116,5 @@ test('tenants api requires 2fa verification', function () {
     $response = $this->getJson('/api/tenants');
 
     $response->assertStatus(403)
-        ->assertJson(['code' => '2FA_REQUIRED']);
+        ->assertJson(['errors' => ['code' => '2FA_REQUIRED']]);
 });

@@ -7,9 +7,15 @@ import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/authApi";
+import VerifyRootUserPage from './pages/VerifyRootUserPage';
 
 function SuperAdminApp() {
     const [loading, setLoading] = useState(true);
+    const [authState, setAuthState] = useState<{
+        user: any;
+        twoFactorPending: boolean;
+    }>({ user: null, twoFactorPending: false });
+
     const [user, setUser] = useState<any>(null);
     const location = useLocation();
 
@@ -19,10 +25,16 @@ function SuperAdminApp() {
             console.log("FETCHING_USER_DATA...");
             const data = await authApi.me();
             console.log("SUCCESS_USER:", data);
-            setUser(data.user);
+
+            setAuthState({
+                user: data.user,
+                twoFactorPending: data.twoFactorPending || false
+            });
+            //setUser(data.user);
         } catch (error: any) {
             console.log("DEBUG_AUTH_ERROR:", error.message);
-            setUser(null);
+            setAuthState({ user: null, twoFactorPending: false });
+            //setUser(null);
         } finally {
             setLoading(false);
         }
@@ -41,8 +53,9 @@ function SuperAdminApp() {
     // 3. Segundo useEffect para cambios de ruta (OPCIONAL)
     // Pero OJO: Todos los Hooks van ANTES de cualquier return
     useEffect(() => {
-        if (user && location.pathname.includes('/login')) {
+        if ((user && location.pathname.includes('/login')) || location.pathname.includes('/verify-email')) {
             // Si ya hay usuario y estamos en login, no hace falta re-chequear,
+            // O si va a validar el token email
             // la lógica de abajo nos redireccionará.
             return;
         }
@@ -57,7 +70,8 @@ function SuperAdminApp() {
         );
     }
 
-    const isAuthenticated = !!user;
+    const isAuthenticated = !!authState.user && !authState.twoFactorPending;
+    //const isAuthenticated = !!user;
 
     return (
         <Routes>
@@ -70,6 +84,7 @@ function SuperAdminApp() {
                         : <LoginPage onLoginSuccess={checkAuth} /> 
                 }
             />
+            <Route path="verify-email" element={<VerifyRootUserPage />} />
 
             <Route 
                 path="/" 

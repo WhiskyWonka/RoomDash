@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Infrastructure\Auth\Models\AdminUser;
+use Infrastructure\Auth\Models\RootUser;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    AdminUser::create([
+    RootUser::factory()->create([
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
+        'email_verified_at' => now(),
+        'is_active' => true,
         'two_factor_enabled' => false,
     ]);
 });
@@ -24,12 +26,14 @@ test('user can login with valid credentials', function () {
 
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'user' => ['id', 'email', 'twoFactorEnabled'],
-            'twoFactorEnabled',
-            'requiresTwoFactorSetup',
+            'data' => [
+                'user' => ['id', 'email'],
+                'twoFactorRequired',
+                'requiresSetup',
+            ],
         ])
         ->assertJson([
-            'requiresTwoFactorSetup' => true,
+            'data' => ['requiresSetup' => true],
         ]);
 });
 

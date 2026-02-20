@@ -1,5 +1,5 @@
 import type { Tenant, CreateTenantInput, UpdateTenantInput } from "@/types/tenant";
-import type { User, CreateUserInput, UpdateUserInput } from "@/types/user";
+import type { RootUser, CreateRootUserInput, UpdateRootUserInput } from "@/types/rootUser";
 import type { Feature, CreateFeatureInput, UpdateFeatureInput } from "@/types/feature";
 
 function getCsrfToken(): string | undefined {
@@ -15,7 +15,6 @@ function getCsrfToken(): string | undefined {
     return undefined;
 }
 
-//const API_BASE_URL = "http://localhost";
 const API_BASE_URL = ""; // ← VACÍO porque todo va por el mismo puerto (8000)
 
 export async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -47,6 +46,12 @@ export async function request<T>(url: string, options?: RequestInit): Promise<T>
         
         if (res.status === 401) {
             throw new Error("UNAUTHORIZED");
+        }
+
+        if (res.status === 422 && body.errors) {
+            console.group("❌ VALIDATION ERROR DETAILS");
+            console.table(body.errors);
+            console.groupEnd();
         }
         
         throw new Error(body?.message ?? `Error ${res.status}: Server Error`);
@@ -81,5 +86,19 @@ function createResource<T, CreateInput = any, UpdateInput = any>(basePath: strin
 }
 
 export const tenantsApi = createResource<Tenant, CreateTenantInput, UpdateTenantInput>("/api/tenants");
-export const usersApi = createResource<User, CreateUserInput, UpdateUserInput>("/api/users");
 export const featuresApi = createResource<Feature, CreateFeatureInput, UpdateFeatureInput>("/api/features");
+
+const baseRootUsers = createResource<RootUser, CreateRootUserInput, UpdateRootUserInput>("/api/root-users");
+
+export const rootUsersApi = {
+    ...baseRootUsers, // Esto trae list, get, create, update, delete
+
+    activate: (id: string | number) => 
+        request<RootUser>(`/api/root-users/${id}/activate`, { method: "PATCH" }),
+        
+    deactivate: (id: string | number) => 
+        request<RootUser>(`/api/root-users/${id}/deactivate`, { method: "PATCH" }),
+        
+    resendVerification: (id: string | number) => 
+        request<void>(`/api/root-users/${id}/resend-verification`, { method: "POST" }),
+};

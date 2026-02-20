@@ -9,8 +9,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     tenantsApi.list()
-      .then((data) => {
-        setTenantsCount(data.length);
+      .then((response: any) => {
+        const tenantsArray = response.data || []; 
+        setTenantsCount(tenantsArray.length);
       })
       .finally(() => setLoading(false));
   }, []);

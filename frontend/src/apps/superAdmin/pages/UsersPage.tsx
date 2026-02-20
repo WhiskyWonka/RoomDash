@@ -3,8 +3,8 @@ import { DeleteUserDialog } from '@/components/ui/8bit/blocks/users/DeleteUserDi
 import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
 import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
 import { Button } from '@/components/ui/8bit/button';
-import { usersApi } from '@/lib/api';
-import { User } from '@/types/user';
+import { rootUsersApi } from '@/lib/api';
+import { RootUser as User } from '@/types/rootUser';
 import { useEffect, useState } from "react";
 
 
@@ -19,7 +19,16 @@ export default function UsersPage() {
 
 
     const load = () => {
-        usersApi.list().then(setUsers);
+        rootUsersApi.list()
+            .then((response: any) => {
+                console.log("LOAD_USERS_RESPONSE:", response);
+                const usersArray = response.data?.users || [];
+                setUsers(usersArray);
+            })
+            .catch(err => {
+                console.error("LOAD_USERS_ERROR:", err);
+                setUsers([]);
+            });
     };
 
     useEffect(load, []);
@@ -39,12 +48,27 @@ export default function UsersPage() {
         setDeleteOpen(true);
     };
 
-    const handleSubmit = async (name: string, email: string) => {
+    const handleSubmit = async (firstName: string, lastName: string, username: string, email: string) => {
+        const tempPassword = "RoomDash_Safe_2026_!@#!"; 
         try {
             if (editing) {
-                await usersApi.update(editing.id, { name, email });
+                await rootUsersApi.update(editing.id, { 
+                    first_name: firstName,
+                    last_name: lastName, 
+                    username, 
+                    email,
+                    password: tempPassword,
+                    password_confirmation: tempPassword
+                });
             } else {
-                await usersApi.create({ name, email });
+                await rootUsersApi.create({ 
+                    first_name: firstName,
+                    last_name: lastName, 
+                    username, 
+                    email,
+                    password: tempPassword,
+                    password_confirmation: tempPassword
+                });
             }
             setDialogOpen(false);
             load();
@@ -55,7 +79,7 @@ export default function UsersPage() {
 
     const handleConfirmDelete = async () => {
         if (deleting) {
-            await usersApi.delete(deleting.id);
+            await rootUsersApi.delete(deleting.id);
         }
         setDeleteOpen(false);
         load();
