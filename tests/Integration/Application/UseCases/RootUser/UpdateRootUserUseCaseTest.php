@@ -2,18 +2,20 @@
 
 declare(strict_types=1);
 
-use Application\RootUser\UseCases\UpdateRootUserUseCase;
 use Application\RootUser\DTOs\UpdateRootUserRequest;
-use Domain\Auth\Entities\RootUser;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
-use Domain\Auth\Ports\EmailVerificationServiceInterface;
+use Application\RootUser\UseCases\UpdateRootUserUseCase;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
+use Domain\Auth\Entities\RootUser;
+use Domain\Auth\Ports\EmailVerificationServiceInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 
 it('updates root user fields', function () {
     // Arrange
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $emailService = Mockery::mock(EmailVerificationServiceInterface::class);
     $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
+    $uuidGenerator = Mockery::mock(UuidGeneratorInterface::class);
 
     $existingUser = new RootUser(
         id: 'user-uuid',
@@ -21,11 +23,13 @@ it('updates root user fields', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $updatedUser = new RootUser(
@@ -34,20 +38,21 @@ it('updates root user fields', function () {
         firstName: 'Jane',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository->shouldReceive('findById')->with('user-uuid')->andReturn($existingUser);
     $userRepository->shouldReceive('existsByEmail')->andReturn(false);
     $userRepository->shouldReceive('existsByUsername')->andReturn(false);
     $userRepository->shouldReceive('update')->once()->andReturn($updatedUser);
-    $auditLogRepository->shouldReceive('create')->once();
 
-    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository);
+    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository, $uuidGenerator);
 
     $request = new UpdateRootUserRequest(
         id: 'user-uuid',
@@ -72,6 +77,7 @@ it('triggers reverification when email changes', function () {
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $emailService = Mockery::mock(EmailVerificationServiceInterface::class);
     $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
+    $uuidGenerator = Mockery::mock(UuidGeneratorInterface::class);
 
     $existingUser = new RootUser(
         id: 'user-uuid',
@@ -79,11 +85,13 @@ it('triggers reverification when email changes', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $updatedUser = new RootUser(
@@ -92,11 +100,13 @@ it('triggers reverification when email changes', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'newemail@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
         emailVerifiedAt: null,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository->shouldReceive('findById')->with('user-uuid')->andReturn($existingUser);
@@ -108,9 +118,7 @@ it('triggers reverification when email changes', function () {
     $emailService->shouldReceive('sendVerificationEmail')->with('user-uuid')->once();
     $emailService->shouldReceive('invalidatePreviousTokens')->with('user-uuid')->once();
 
-    $auditLogRepository->shouldReceive('create')->once();
-
-    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository);
+    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository, $uuidGenerator);
 
     $request = new UpdateRootUserRequest(
         id: 'user-uuid',
@@ -129,11 +137,12 @@ it('triggers reverification when email changes', function () {
     // Assert -- verified by mock expectations above
 });
 
-it('records audit log entry with old and new values on update', function () {
+it('calls update repository with new field values', function () {
     // Arrange
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $emailService = Mockery::mock(EmailVerificationServiceInterface::class);
     $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
+    $uuidGenerator = Mockery::mock(UuidGeneratorInterface::class);
 
     $existingUser = new RootUser(
         id: 'user-uuid',
@@ -141,11 +150,13 @@ it('records audit log entry with old and new values on update', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $updatedUser = new RootUser(
@@ -154,27 +165,27 @@ it('records audit log entry with old and new values on update', function () {
         firstName: 'Jane',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository->shouldReceive('findById')->andReturn($existingUser);
     $userRepository->shouldReceive('existsByEmail')->andReturn(false);
     $userRepository->shouldReceive('existsByUsername')->andReturn(false);
-    $userRepository->shouldReceive('update')->andReturn($updatedUser);
-
-    $auditLogRepository->shouldReceive('create')
+    $userRepository->shouldReceive('update')
         ->once()
-        ->with(Mockery::on(function ($auditLog) {
-            return $auditLog->action === 'root_user.updated'
-                && $auditLog->oldValues !== null
-                && $auditLog->newValues !== null;
-        }));
+        ->with('user-uuid', Mockery::on(function ($data) {
+            return $data['first_name'] === 'Jane'
+                && $data['last_name'] === 'Doe';
+        }))
+        ->andReturn($updatedUser);
 
-    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository);
+    $useCase = new UpdateRootUserUseCase($userRepository, $emailService, $auditLogRepository, $uuidGenerator);
 
     $request = new UpdateRootUserRequest(
         id: 'user-uuid',

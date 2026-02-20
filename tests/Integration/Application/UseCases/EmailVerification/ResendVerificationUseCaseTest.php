@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Application\EmailVerification\UseCases\ResendVerificationUseCase;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
+use Application\EmailVerification\UseCases\ResendVerificationUseCase;
 use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\EmailVerificationServiceInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
 
 it('invalidates previous tokens and sends new email', function () {
     // Arrange
@@ -17,11 +17,13 @@ it('invalidates previous tokens and sends new email', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
         emailVerifiedAt: null, // Not verified
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
@@ -50,11 +52,13 @@ it('throws exception when user already verified', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(), // Already verified
+        emailVerifiedAt: new DateTimeImmutable, // Already verified
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);

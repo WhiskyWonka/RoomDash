@@ -96,20 +96,6 @@ class LoginController extends Controller implements LoginEndpoints
 
         $user = $this->users->findById($userId);
 
-        // Record audit log for successful login after 2FA
-        // $this->auditLogRepository->create(new AuditLog(
-        //     id: Str::uuid()->toString(),
-        //     userId: $userId,
-        //     action: 'auth.login',
-        //     entityType: null,
-        //     entityId: null,
-        //     oldValues: null,
-        //     newValues: null,
-        //     ipAddress: $request->ip(),
-        //     userAgent: $request->userAgent(),
-        //     createdAt: new DateTimeImmutable,
-        // ));
-
         $response_data = [
             'user' => $user,
             'verified' => true,

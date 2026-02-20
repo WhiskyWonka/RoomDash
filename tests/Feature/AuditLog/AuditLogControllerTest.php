@@ -47,8 +47,12 @@ it('returns 200 with paginated audit logs', function () {
     // Assert
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'data',
-            'meta' => ['current_page', 'per_page', 'total'],
+            'success',
+            'message',
+            'data' => [
+                'items',
+                'meta' => ['current_page', 'per_page', 'total'],
+            ],
         ]);
 });
 
@@ -64,7 +68,7 @@ it('returns audit logs newest first', function () {
 
     // Assert
     $response->assertStatus(200);
-    $data = $response->json('data');
+    $data = $response->json('data.items');
     expect($data[0]['id'])->toBe($newLog->id); // Newest first
     expect($data[1]['id'])->toBe($oldLog->id);
 });
@@ -82,7 +86,7 @@ it('returns audit logs filtered by user id', function () {
 
     // Assert
     $response->assertStatus(200);
-    $data = $response->json('data');
+    $data = $response->json('data.items');
     expect($data)->toHaveCount(1);
     expect($data[0]['userId'])->toBe($specificUserId);
 });
@@ -99,7 +103,7 @@ it('returns audit logs filtered by action', function () {
 
     // Assert
     $response->assertStatus(200);
-    $data = $response->json('data');
+    $data = $response->json('data.items');
     expect($data)->toHaveCount(1);
     expect($data[0]['action'])->toBe('root_user.created');
 });
@@ -116,7 +120,7 @@ it('returns audit logs filtered by date range', function () {
 
     // Assert
     $response->assertStatus(200);
-    $data = $response->json('data');
+    $data = $response->json('data.items');
     expect($data)->toHaveCount(1);
 });
 
@@ -132,7 +136,7 @@ it('returns audit logs filtered by entity type', function () {
 
     // Assert
     $response->assertStatus(200);
-    $data = $response->json('data');
+    $data = $response->json('data.items');
     expect($data)->toHaveCount(1);
     expect($data[0]['entityType'])->toBe('root_user');
 });

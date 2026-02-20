@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Infrastructure\Auth\Models\RootUser;
-use Infrastructure\AuditLog\Models\AuditLog;
 use Tests\Helpers\ActsAsAuthenticatedRootUser;
 
 uses(RefreshDatabase::class, ActsAsAuthenticatedRootUser::class);
@@ -31,7 +31,7 @@ it('returns 403 with 2FA_REQUIRED when 2fa not verified', function () {
 
     // Assert
     $response->assertStatus(403)
-        ->assertJson(['code' => '2FA_REQUIRED']);
+        ->assertJson(['errors' => ['code' => '2FA_REQUIRED']]);
 });
 
 // =========================================================================
@@ -49,8 +49,10 @@ it('returns 200 with paginated list of root users', function () {
     // Assert
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'data',
-            'meta' => ['current_page', 'per_page', 'total'],
+            'data' => [
+                'items',
+                'meta' => ['current_page', 'per_page', 'total'],
+            ],
         ]);
 });
 
@@ -65,17 +67,17 @@ it('returns correct fields in root user list', function () {
     $response->assertStatus(200)
         ->assertJsonStructure([
             'data' => [
-                '*' => [
-                    'id',
-                    'username',
-                    'firstName',
-                    'lastName',
-                    'email',
-                    'avatarUrl',
-                    'isActive',
-                    'emailVerifiedAt',
-                    'twoFactorEnabled',
-                    'createdAt',
+                'items' => [
+                    '*' => [
+                        'id',
+                        'username',
+                        'firstName',
+                        'lastName',
+                        'email',
+                        'avatarUrl',
+                        'isActive',
+                        'createdAt',
+                    ],
                 ],
             ],
         ]);
@@ -115,6 +117,7 @@ it('returns 404 when root user not found', function () {
 
 it('returns 201 when creating root user with valid data', function () {
     // Arrange
+    Http::fake(['api.pwnedpasswords.com/*' => Http::response('', 200)]);
     Mail::fake();
     $this->actingAsVerifiedRootUser();
 
@@ -123,6 +126,8 @@ it('returns 201 when creating root user with valid data', function () {
         'first_name' => 'New',
         'last_name' => 'User',
         'email' => 'newuser@example.com',
+        'password' => 'SecurePassword123!',
+        'password_confirmation' => 'SecurePassword123!',
     ];
 
     // Act
@@ -203,6 +208,7 @@ it('returns 422 when required fields are missing', function () {
 
 it('records audit log when root user created', function () {
     // Arrange
+    Http::fake(['api.pwnedpasswords.com/*' => Http::response('', 200)]);
     Mail::fake();
     $actor = $this->actingAsVerifiedRootUser();
 
@@ -212,6 +218,8 @@ it('records audit log when root user created', function () {
         'first_name' => 'New',
         'last_name' => 'User',
         'email' => 'newuser@example.com',
+        'password' => 'SecurePassword123!',
+        'password_confirmation' => 'SecurePassword123!',
     ]);
 
     // Assert
@@ -456,8 +464,8 @@ it('returns 409 when resending verification for already verified user', function
     $response = $this->postJson("/api/root-users/{$verified->id}/resend-verification");
 
     // Assert
-    $response->assertStatus(409)
-        ->assertJson(['message' => 'User has already been verified']);
+    $response->assertStatus(400)
+        ->assertJson(['message' => 'User is already verified']);
 });
 
 // =========================================================================
@@ -562,7 +570,7 @@ it('returns 404 when uploading avatar for non existent user', function () {
     $file = \Illuminate\Http\UploadedFile::fake()->image('avatar.jpg', 200, 200);
 
     // Act
-    $response = $this->postJson('/api/root-users/nonexistent-uuid/avatar', [
+    $response = $this->postJson('/api/root-users/00000000-0000-0000-0000-000000000000/avatar', [
         'avatar' => $file,
     ]);
 

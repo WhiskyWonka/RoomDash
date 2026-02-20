@@ -2,14 +2,20 @@
 
 declare(strict_types=1);
 
-use Application\AuditLog\UseCases\RecordAuditLogUseCase;
 use Application\AuditLog\DTOs\RecordAuditLogRequest;
+use Application\AuditLog\UseCases\RecordAuditLogUseCase;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
+use Domain\Shared\Ports\UuidGeneratorInterface;
 
 it('records audit log with correct data', function () {
     // Arrange
     $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
+    $uuidGenerator = Mockery::mock(UuidGeneratorInterface::class);
+
+    $uuidGenerator->shouldReceive('generate')
+        ->once()
+        ->andReturn('generated-uuid');
 
     $auditLogRepository->shouldReceive('create')
         ->once()
@@ -22,7 +28,9 @@ it('records audit log with correct data', function () {
                 && $log->userAgent === 'TestAgent/1.0';
         }));
 
-    $useCase = new RecordAuditLogUseCase($auditLogRepository);
+    $useCase = new RecordAuditLogUseCase(
+        $auditLogRepository,
+        $uuidGenerator, );
 
     $request = new RecordAuditLogRequest(
         actorId: 'actor-uuid',

@@ -37,7 +37,6 @@ class RootUserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'password' => null,
             'email_verified_at' => null,
         ]);
     }
@@ -60,7 +59,7 @@ class RootUserFactory extends Factory
     public function withAvatar(): static
     {
         return $this->state(fn (array $attributes) => [
-            'avatar_path' => 'avatars/' . Str::uuid() . '.webp',
+            'avatar_path' => 'avatars/'.Str::uuid().'.webp',
         ]);
     }
 }

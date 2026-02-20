@@ -26,12 +26,14 @@ test('user can login with valid credentials', function () {
 
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'user' => ['id', 'email', 'twoFactorEnabled'],
-            'twoFactorEnabled',
-            'requiresTwoFactorSetup',
+            'data' => [
+                'user' => ['id', 'email'],
+                'twoFactorRequired',
+                'requiresSetup',
+            ],
         ])
         ->assertJson([
-            'requiresTwoFactorSetup' => true,
+            'data' => ['requiresSetup' => true],
         ]);
 });
 

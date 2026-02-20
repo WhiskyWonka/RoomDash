@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Infrastructure\Auth\Models\RootUser;
-use Infrastructure\AuditLog\Models\AuditLog;
 use Tests\Helpers\ActsAsAuthenticatedRootUser;
 
 uses(RefreshDatabase::class, ActsAsAuthenticatedRootUser::class);
@@ -31,7 +30,7 @@ it('returns 403 with EMAIL_NOT_VERIFIED when user is not verified', function () 
 
     // Assert
     $response->assertStatus(403)
-        ->assertJson(['code' => 'EMAIL_NOT_VERIFIED']);
+        ->assertJson(['errors' => ['code' => 'EMAIL_NOT_VERIFIED']]);
 });
 
 it('returns 403 with ACCOUNT_DEACTIVATED when user is deactivated', function () {
@@ -51,7 +50,7 @@ it('returns 403 with ACCOUNT_DEACTIVATED when user is deactivated', function () 
 
     // Assert
     $response->assertStatus(403)
-        ->assertJson(['code' => 'ACCOUNT_DEACTIVATED']);
+        ->assertJson(['errors' => ['code' => 'ACCOUNT_DEACTIVATED']]);
 });
 
 // =========================================================================
@@ -60,7 +59,7 @@ it('returns 403 with ACCOUNT_DEACTIVATED when user is deactivated', function () 
 
 it('records audit log on successful login after 2fa', function () {
     // Arrange
-    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+    $google2fa = new \PragmaRX\Google2FA\Google2FA;
     $secret = $google2fa->generateSecretKey();
 
     $user = RootUser::factory()->create([
@@ -88,7 +87,7 @@ it('records audit log on successful login after 2fa', function () {
     // Assert
     $this->assertDatabaseHas('audit_logs', [
         'user_id' => $user->id,
-        'action' => 'auth.login',
+        'action' => 'root_user.verify2fa',
     ]);
 });
 

@@ -30,6 +30,9 @@ class AuditLogger
 
     public function handle(Request $request, Closure $next, string $entityType = 'unknown', string $tableName = ''): Response
     {
+        // Capture user ID early — session may be invalidated by the controller (e.g. logout)
+        $request->attributes->set('audit_captured_user_id', $request->session()->get('admin_user_id'));
+
         if (in_array($request->method(), ['PUT', 'PATCH', 'DELETE']) && $tableName) {
             $id = $request->route('id');
 
@@ -73,9 +76,16 @@ class AuditLogger
             }
         }
 
+        $userId = $request->session()->get('admin_user_id')
+            ?? $request->attributes->get('audit_captured_user_id');
+
+        if ($userId === null) {
+            return;
+        }
+
         $this->auditLogRepository->create(new AuditLog(
             id: $this->uuidGenerator->generate(),
-            userId: $request->session()->get('admin_user_id') ?? null,
+            userId: $userId,
             action: $action,
             entityType: $entityType,
             entityId: $entityId,

@@ -39,7 +39,7 @@ trait ActsAsAuthenticatedRootUser
             'is_active' => true,
         ]);
 
-        $this->withSession([
+        $this->actingAs($user, 'admin')->withSession([
             'admin_user_id' => $user->id,
             '2fa_pending' => true,
             '2fa_verified' => false,

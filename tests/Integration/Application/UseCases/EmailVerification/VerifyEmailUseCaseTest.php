@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-use Application\EmailVerification\UseCases\VerifyEmailUseCase;
 use Application\EmailVerification\DTOs\VerifyEmailRequest;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
-use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
+use Application\EmailVerification\UseCases\VerifyEmailUseCase;
 use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
+use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
+use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\ValueObjects\EmailVerificationToken;
+use Domain\Shared\Ports\PasswordHasherInterface;
 
 it('sets email verified at and password on valid token', function () {
     // Arrange
@@ -20,17 +21,19 @@ it('sets email verified at and password on valid token', function () {
         userId: 'user-uuid',
         hashedToken: $hashedToken,
         expiresAt: new DateTimeImmutable('+24 hours'),
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
+    $passwordHasher->shouldReceive('hash')->once()->andReturn('hashed-password');
     $tokenRepository->shouldReceive('findByHashedToken')->with($hashedToken)->andReturn($tokenRecord);
     $userRepository->shouldReceive('verifyEmail')->with('user-uuid', Mockery::type('string'))->once();
     $tokenRepository->shouldReceive('deleteByUserId')->with('user-uuid')->once();
 
-    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository);
+    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository, $passwordHasher);
 
     $request = new VerifyEmailRequest(
         token: $rawToken,
@@ -52,19 +55,21 @@ it('consumes token after verification', function () {
         userId: 'user-uuid',
         hashedToken: $hashedToken,
         expiresAt: new DateTimeImmutable('+24 hours'),
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
+    $passwordHasher->shouldReceive('hash')->once()->andReturn('hashed-password');
     $tokenRepository->shouldReceive('findByHashedToken')->andReturn($tokenRecord);
     $userRepository->shouldReceive('verifyEmail')->once();
     $tokenRepository->shouldReceive('deleteByUserId')
         ->with('user-uuid')
         ->once(); // Token must be deleted after use
 
-    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository);
+    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository, $passwordHasher);
 
     $request = new VerifyEmailRequest(
         token: $rawToken,
@@ -91,10 +96,11 @@ it('throws exception for expired token', function () {
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $tokenRepository->shouldReceive('findByHashedToken')->with($hashedToken)->andReturn($expiredToken);
 
-    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository);
+    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository, $passwordHasher);
 
     $request = new VerifyEmailRequest(
         token: $rawToken,
@@ -114,10 +120,11 @@ it('throws exception when token does not exist', function () {
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $tokenRepository->shouldReceive('findByHashedToken')->with($hashedToken)->andReturn(null);
 
-    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository);
+    $useCase = new VerifyEmailUseCase($tokenRepository, $userRepository, $passwordHasher);
 
     $request = new VerifyEmailRequest(
         token: $rawToken,

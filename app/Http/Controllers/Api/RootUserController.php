@@ -67,7 +67,7 @@ class RootUserController extends Controller implements RootUserEndpoints
         ])->all();
 
         return $this->success(data: [
-            'users' => $data,
+            'items' => $data,
             'meta' => [
                 'current_page' => $paginator->currentPage,
                 'per_page' => $paginator->perPage,

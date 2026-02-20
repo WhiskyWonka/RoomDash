@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-use Application\RootUser\UseCases\DeleteRootUserUseCase;
 use Application\RootUser\DTOs\DeleteRootUserRequest;
+use Application\RootUser\UseCases\DeleteRootUserUseCase;
 use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\SelfDeletionException;
-use Domain\Auth\Exceptions\LastActiveUserException;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Services\LastActiveUserGuard;
-use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 
 it('deletes root user successfully', function () {
     // Arrange
@@ -19,23 +17,23 @@ it('deletes root user successfully', function () {
         firstName: 'Target',
         lastName: 'User',
         email: 'target@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $lastActiveGuard = Mockery::mock(LastActiveUserGuard::class);
-    $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
 
     $userRepository->shouldReceive('findById')->with('target-uuid')->andReturn($targetUser);
     $lastActiveGuard->shouldReceive('assertCanDelete')->with('target-uuid')->once();
     $userRepository->shouldReceive('delete')->with('target-uuid')->once();
-    $auditLogRepository->shouldReceive('create')->once();
 
-    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard, $auditLogRepository);
+    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard);
 
     $request = new DeleteRootUserRequest(
         id: 'target-uuid',
@@ -58,20 +56,21 @@ it('throws exception when deleting own account', function () {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $lastActiveGuard = Mockery::mock(LastActiveUserGuard::class);
-    $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
 
     $userRepository->shouldReceive('findById')->with($userId)->andReturn($user);
 
-    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard, $auditLogRepository);
+    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard);
 
     $request = new DeleteRootUserRequest(
         id: $userId,
@@ -85,7 +84,7 @@ it('throws exception when deleting own account', function () {
         ->toThrow(SelfDeletionException::class, 'Cannot delete your own account');
 });
 
-it('records audit log entry on deletion', function () {
+it('calls delete repository with correct id', function () {
     // Arrange
     $targetUser = new RootUser(
         id: 'target-uuid',
@@ -93,30 +92,25 @@ it('records audit log entry on deletion', function () {
         firstName: 'Target',
         lastName: 'User',
         email: 'target@example.com',
+        password: 'hashed-password',
+        avatarPath: null,
         isActive: true,
         twoFactorEnabled: false,
-        emailVerifiedAt: new DateTimeImmutable(),
+        emailVerifiedAt: new DateTimeImmutable,
         twoFactorConfirmedAt: null,
-        createdAt: new DateTimeImmutable(),
+        createdAt: new DateTimeImmutable,
     );
 
     $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
     $lastActiveGuard = Mockery::mock(LastActiveUserGuard::class);
-    $auditLogRepository = Mockery::mock(AuditLogRepositoryInterface::class);
 
     $userRepository->shouldReceive('findById')->with('target-uuid')->andReturn($targetUser);
     $lastActiveGuard->shouldReceive('assertCanDelete')->once();
-    $userRepository->shouldReceive('delete')->once();
-
-    $auditLogRepository->shouldReceive('create')
+    $userRepository->shouldReceive('delete')
         ->once()
-        ->with(Mockery::on(function ($auditLog) {
-            return $auditLog->action === 'root_user.deleted'
-                && $auditLog->entityType === 'root_user'
-                && $auditLog->entityId === 'target-uuid';
-        }));
+        ->with('target-uuid');
 
-    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard, $auditLogRepository);
+    $useCase = new DeleteRootUserUseCase($userRepository, $lastActiveGuard);
 
     $request = new DeleteRootUserRequest(
         id: 'target-uuid',

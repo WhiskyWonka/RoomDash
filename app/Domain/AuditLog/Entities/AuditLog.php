@@ -13,7 +13,7 @@ final class AuditLog implements JsonSerializable
 
     public function __construct(
         public readonly string $id,
-        public readonly string $userId,
+        public readonly ?string $userId,
         public readonly string $action,
         public readonly ?string $entityType,
         public readonly ?string $entityId,
