@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SuperAdminApp from "./apps/superAdmin/SuperAdminApp";
 import HotelAdminApp from "./apps/hotelAdmin/HotelAdminApp";
+import MainLanding from "./apps/landing/MainLanding";
+import Landing from "./apps/landing-tenant/Landing";
 
 export default function App() {
   // Obtenemos el host actual (ej: roomdash.test o mypod.roomdash.test)
@@ -20,13 +22,14 @@ export default function App() {
           /* --- RUTAS PARA EL TENANT (mypod.roomdash.test) --- */
           <>
             <Route path="/admin/*" element={<HotelAdminApp />} />
-            <Route path="/" element={<h1>Landing Page del Hotel: {hostname.split('.')[0]}</h1>} />
+            <Route path="/" element={<Landing />} />
           </>
         ) : (
           /* --- RUTAS PARA EL SUPERADMIN (roomdash.test) --- */
           <>
             <Route path="/admin/*" element={<SuperAdminApp />} />
-            <Route path="/" element={<h1>Landing Page Principal ROOMDASH</h1>} />
+            <Route path="/" element={<MainLanding />} />
+            {/* <Route path="/" element={<h1>Landing Page Principal ROOMDASH</h1>} /> */}
           </>
         )}
       </Routes>
