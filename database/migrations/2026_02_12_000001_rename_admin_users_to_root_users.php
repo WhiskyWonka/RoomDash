@@ -28,8 +28,7 @@ return new class extends Migration
     {
         Schema::table('root_users', function (Blueprint $table) {
             $table->dropIndex(['is_active']);
-            $table->dropColumn(['username', 'first_name', 'last_name', 'avatar_path', 'is_active', 'email_verified_at']);
-            $table->string('password')->nullable(false)->change();
+            $table->dropColumn(['username', 'first_name', 'last_name', 'password', 'avatar_path', 'is_active', 'email_verified_at']);
         });
 
         Schema::rename('root_users', 'admin_users');

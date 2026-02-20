@@ -7,19 +7,23 @@ namespace App\Http\Controllers\Api;
 use App\Docs\Endpoints\Api\RootUserEndpoints;
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RootUser\RootUserChangePasswordRequest;
 use App\Http\Requests\RootUser\RootUserStoreRequest;
 use App\Http\Requests\RootUser\RootUserUpdateRequest;
 use App\Http\Requests\RootUser\RootUserUploadAvatarRequest;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Application\EmailVerification\UseCases\ResendVerificationUseCase;
+use Application\RootUser\DTOs\ChangePasswordRequest;
 use Application\RootUser\DTOs\CreateRootUserRequest;
 use Application\RootUser\DTOs\DeleteRootUserRequest;
 use Application\RootUser\DTOs\UpdateRootUserRequest;
+use Application\RootUser\UseCases\ChangePasswordUseCase;
 use Application\RootUser\UseCases\CreateRootUserUseCase;
 use Application\RootUser\UseCases\DeleteRootUserUseCase;
 use Application\RootUser\UseCases\UpdateRootUserUseCase;
 use Domain\Auth\Entities\RootUser;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
+use Domain\Auth\Exceptions\InvalidCurrentPasswordException;
 use Domain\Auth\Exceptions\LastActiveUserException;
 use Domain\Auth\Exceptions\SelfDeletionException;
 use Domain\Auth\Ports\RootUserRepositoryInterface;
@@ -37,6 +41,7 @@ class RootUserController extends Controller implements RootUserEndpoints
         private readonly CreateRootUserUseCase $createUseCase,
         private readonly UpdateRootUserUseCase $updateUseCase,
         private readonly DeleteRootUserUseCase $deleteUseCase,
+        private readonly ChangePasswordUseCase $changePasswordUseCase,
         private readonly ResendVerificationUseCase $resendVerificationUseCase,
         private readonly RootUserRepositoryInterface $userRepository,
         private readonly LastActiveUserGuard $lastActiveGuard,
@@ -176,6 +181,32 @@ class RootUserController extends Controller implements RootUserEndpoints
             return response()->json(['message' => $e->getMessage()], 409);
         }
 
+    }
+
+    public function changePassword(RootUserChangePasswordRequest $request, string $id): JsonResponse
+    {
+        $user = $this->userRepository->findById($id);
+        if (! $user) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $actorId = $request->session()->get('admin_user_id');
+        $data = $request->validated();
+
+        try {
+            $this->changePasswordUseCase->execute(new ChangePasswordRequest(
+                id: $id,
+                newPassword: $data['password'],
+                currentPassword: $data['current_password'] ?? null,
+                actorId: $actorId,
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent(),
+            ));
+
+            return $this->success(data: null, message: 'Password changed successfully');
+        } catch (InvalidCurrentPasswordException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
     }
 
     public function deactivate(Request $request, string $id): JsonResponse

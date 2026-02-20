@@ -18,6 +18,7 @@ export function UsersTable({ users, onEdit, onDelete }: Props) {
             <TableHeader>
                 <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -26,10 +27,11 @@ export function UsersTable({ users, onEdit, onDelete }: Props) {
             <TableBody>
                 {users.map((t) => (
                     <TableRow key={t.id}>
+                        <TableCell>{t.firstName} {t.lastName}</TableCell>
                         <TableCell className="font-medium">
                             {typeof t.username === 'string' && t.username.length > 0 
                                 ? t.username 
-                                : `user_${t.id.substring(0, 5)}`}
+                                : 'N/A'}
                         </TableCell>
                         <TableCell>{t.email}</TableCell>
                         <TableCell>{new Date(t.createdAt).toLocaleDateString()}</TableCell>

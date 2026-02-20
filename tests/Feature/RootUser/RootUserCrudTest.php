@@ -469,6 +469,94 @@ it('returns 409 when resending verification for already verified user', function
 });
 
 // =========================================================================
+// Change Password (PATCH /api/root-users/{id}/password)
+// =========================================================================
+
+it('returns 200 when changing own password with correct current password', function () {
+    // Arrange
+    $actor = $this->actingAsVerifiedRootUser();
+
+    // Act
+    $response = $this->patchJson("/api/root-users/{$actor->id}/password", [
+        'current_password' => 'password',
+        'password' => 'N3wS3cur3P@ss!',
+        'password_confirmation' => 'N3wS3cur3P@ss!',
+    ]);
+
+    // Assert
+    $response->assertStatus(200)
+        ->assertJson(['message' => 'Password changed successfully']);
+});
+
+it('returns 200 when admin changes another users password without current password', function () {
+    // Arrange
+    $actor = $this->actingAsVerifiedRootUser();
+    $target = RootUser::factory()->create();
+
+    // Act
+    $response = $this->patchJson("/api/root-users/{$target->id}/password", [
+        'password' => 'N3wS3cur3P@ss!',
+        'password_confirmation' => 'N3wS3cur3P@ss!',
+    ]);
+
+    // Assert
+    $response->assertStatus(200)
+        ->assertJson(['message' => 'Password changed successfully']);
+});
+
+it('returns 403 when changing own password with wrong current password', function () {
+    // Arrange
+    $actor = $this->actingAsVerifiedRootUser();
+
+    // Act
+    $response = $this->patchJson("/api/root-users/{$actor->id}/password", [
+        'current_password' => 'wrong-password',
+        'password' => 'N3wS3cur3P@ss!',
+        'password_confirmation' => 'N3wS3cur3P@ss!',
+    ]);
+
+    // Assert
+    $response->assertStatus(403)
+        ->assertJson(['message' => 'Current password is incorrect']);
+});
+
+it('returns 422 when new password does not meet requirements', function () {
+    // Arrange
+    $actor = $this->actingAsVerifiedRootUser();
+    $target = RootUser::factory()->create();
+
+    // Act
+    $response = $this->patchJson("/api/root-users/{$target->id}/password", [
+        'password' => 'weak',
+        'password_confirmation' => 'weak',
+    ]);
+
+    // Assert
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['password']);
+});
+
+it('records audit log when password changed', function () {
+    // Arrange
+    $actor = $this->actingAsVerifiedRootUser();
+    $target = RootUser::factory()->create();
+
+    // Act
+    $this->patchJson("/api/root-users/{$target->id}/password", [
+        'password' => 'N3wS3cur3P@ss!',
+        'password_confirmation' => 'N3wS3cur3P@ss!',
+    ]);
+
+    // Assert
+    $this->assertDatabaseHas('audit_logs', [
+        'user_id' => $actor->id,
+        'action' => 'root_user.password_changed',
+        'entity_type' => 'root_user',
+        'entity_id' => $target->id,
+    ]);
+});
+
+// =========================================================================
 // Avatar
 // =========================================================================
 

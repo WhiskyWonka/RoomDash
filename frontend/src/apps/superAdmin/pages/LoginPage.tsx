@@ -9,7 +9,7 @@ interface LoginPageProps {
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     const [show2FA, setShow2FA] = useState(false);
-    const [qrData, setQrData] = useState<{ qr_code_url: string; secret: string } | null>(null);
+    const [qrData, setQrData] = useState<{ qrCode: string; secret: string } | null>(null);
     const navigate = useNavigate();
 
     const handleLogin = async (data: any) => {
@@ -23,19 +23,21 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             const result = response.data;
 
             if (result && result.twoFactorRequired) {
-                setShow2FA(true);
+                if (result.requiresSetup) {
+                    console.log("FETCHING_2FA_SETUP_DATA...");
+                    const setupResponse = await authApi.setup2FA();
+                    const setupData = setupResponse.data; 
 
-                if (result.requiresSetup && result.qr_code_url) {
                     setQrData({
-                        qr_code_url: result.qr_code_url,
-                        secret: result.secret
+                        qrCode: setupData.qrCode,
+                        secret: setupData.secret
                     });
                 } else {
                     setQrData(null);
                 }
-            /*if (response.twoFactorEnabled === true) {
-                console.log("MOSTRANDO 2FA");
-                setShow2FA(true);*/
+
+                setShow2FA(true);
+
             } else {
                 console.log("LOGIN_EXITOSO_SIN_2FA");
                 await onLoginSuccess(); 

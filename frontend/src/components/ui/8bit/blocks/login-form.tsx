@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/8bit/label";
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
     onSubmit: (credentials: any) => void;
     show2FA: boolean;
-    qrData?: { qr_code_url: string; secret: string } | null;
+    qrData?: { qrCode: string; secret: string } | null
     onVerify2FA: (code: string) => void;
     onCancel2FA: () => void;
 }
@@ -45,6 +45,8 @@ export function LoginForm({
             }
         }
     };
+
+    console.log("DATOS_QR:", qrData)
     
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -86,7 +88,7 @@ export function LoginForm({
                                             [ NEW_SECURITY_LAYER_DETECTED ]
                                         </p>
                                         <div className="bg-white p-2 border-4 border-zinc-800">
-                                            <img src={qrData.qr_code_url} alt="2FA QR" className="w-32 h-32" />
+                                            <img src={qrData.qrCode} alt="2FA QR" className="w-32 h-32" />
                                         </div>
                                         <div className="text-center">
                                             <p className="text-[8px] text-zinc-500 mb-1">MANUAL_KEY</p>
