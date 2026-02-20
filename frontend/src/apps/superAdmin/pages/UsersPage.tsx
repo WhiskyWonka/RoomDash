@@ -48,12 +48,27 @@ export default function UsersPage() {
         setDeleteOpen(true);
     };
 
-    const handleSubmit = async (first_name: string, last_name: string, username: string, email: string) => {
+    const handleSubmit = async (firstName: string, lastName: string, username: string, email: string) => {
+        const tempPassword = "RoomDash_Safe_2026_!@#!"; 
         try {
             if (editing) {
-                await rootUsersApi.update(editing.id, { first_name, last_name, username, email });
+                await rootUsersApi.update(editing.id, { 
+                    first_name: firstName,
+                    last_name: lastName, 
+                    username, 
+                    email,
+                    password: tempPassword,
+                    password_confirmation: tempPassword
+                });
             } else {
-                await rootUsersApi.create({ first_name, last_name, username, email });
+                await rootUsersApi.create({ 
+                    first_name: firstName,
+                    last_name: lastName, 
+                    username, 
+                    email,
+                    password: tempPassword,
+                    password_confirmation: tempPassword
+                });
             }
             setDialogOpen(false);
             load();

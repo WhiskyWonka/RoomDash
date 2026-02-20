@@ -13,12 +13,62 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        /* Estilos de Impresión Optimizados */
         @media print {
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+            
+            body { 
+                background-color: white !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+            }
+
             .no-print { display: none !important; }
-            body { background-color: white; padding: 0; }
-            .max-w-4xl { max-width: 100% !important; margin: 0 !important; }
-            .shadow-xl { box-shadow: none !important; }
-            .page-break { page-break-before: always; }
+            
+            .max-w-4xl { 
+                max-width: 100% !important; 
+                width: 100% !important;
+                margin: 0 !important; 
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .page-break { 
+                page-break-before: always; 
+                break-before: page;
+                padding-top: 3rem; /* Aumentado para mejor visual */
+            }
+
+            /* FORZAR FILA EN INVERSION (Solución al problema) */
+            .force-row-print {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+
+            .force-row-print > div {
+                flex: 1 !important;
+            }
+
+            .vertical-divider-print {
+                height: 60px !important;
+                width: 1px !important;
+                display: block !important;
+                background-color: #e2e8f0 !important;
+                margin: 0 20px !important;
+            }
+
+            header {
+                -webkit-print-color-adjust: exact;
+                margin-top: -1.5cm !important;
+                margin-left: -1.5cm !important;
+                margin-right: -1.5cm !important;
+            }
         }
         /* Colores personalizados mezclados */
         .bg-roomdash-dark { background-color: #0f172a; } /* Slate 950 */
@@ -38,7 +88,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Generar Documento PDF
+            PDF
         </button>
     </div>
 
@@ -62,7 +112,7 @@
                 <div class="w-20 h-1.5 bg-indigo-300 mb-12 rounded-full"></div>
                 
                 <p class="text-xl text-slate-300 font-light tracking-wide mb-16 leading-relaxed">
-                    Transformamos la complejidad operativa en un flujo digital invisible, conectando cada reserva con la normativa fiscal de forma inteligente.
+                    Transformamos la complejidad operativa en un flujo digital invisible.
                 </p>
 
                 <div class="grid grid-cols-2 gap-12 pt-10 border-t border-slate-800/50">
@@ -71,8 +121,17 @@
                         <span class="text-lg font-semibold text-slate-100 uppercase tracking-tight">My Pod Capsule</span>
                     </div>
                     <div class="text-right">
-                        <span class="block text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Fecha de emisión</span>
-                        <span class="text-lg font-semibold text-slate-100 tracking-tight">17 Feb, 2026</span>
+                        <div class="flex items-center justify-end gap-6">
+                            <div>
+                                <span class="block text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Fecha de emisión</span>
+                                <span class="text-lg font-semibold text-slate-100 tracking-tight">19 Feb, 2026</span>
+                            </div>
+                            <div class="h-10 w-px bg-slate-800 self-end mb-1"></div>
+                            <div class="text-left">
+                                <span class="block text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Validez hasta</span>
+                                <span class="text-lg font-semibold text-slate-300 tracking-tight">5 Mar, 2026</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,7 +148,9 @@
                 </div>
                 <div class="pl-8 border-l-2 border-indigo-500/20">
                     <p class="text-lg text-slate-600 leading-relaxed font-light italic">
-                        "El objetivo central es el despliegue de una infraestructura robusta que automatice la operativa diaria, garantizando el cumplimiento fiscal ante <span class="text-indigo-900 font-semibold uppercase">ARCA</span> y ofreciendo una experiencia de reserva digital fluida para el pasajero."
+                        "El objetivo central es el despliegue de una infraestructura que automatice la operativa diaria, 
+                        garantizando el cumplimiento fiscal ante <span class="text-indigo-900 font-semibold uppercase">ARCA</span> 
+                        y ofreciendo una experiencia de reserva digital fluida para el pasajero."
                     </p>
                 </div>
             </section>
@@ -178,7 +239,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <span class="text-indigo-400 font-bold">›</span>
-                                <span>Envío por email/WhatsApp.</span>
+                                <span>Envío por Email</span>
                             </div>
                         </div>
                     </div>
@@ -222,34 +283,40 @@
                             <tr>
                                 <td class="p-6">
                                     <span class="text-slate-900 block font-bold">01. Setup de Infraestructura</span>
-                                    <span class="text-[11px] text-slate-400 font-normal">Servidores seguros, Base de Datos y Certificados SSL.</span>
+                                    <span class="text-[11px] text-slate-400 font-normal">Servidores seguros, Base de Datos, Backups y Certificados SSL.</span>
                                 </td>
                                 <td class="p-6 text-right text-indigo-900">2 Sem</td>
                             </tr>
                             <tr>
                                 <td class="p-6 text-slate-600">
-                                    <span class="text-slate-900 block font-bold">02. Desarrollo Core PMS</span>
-                                    <span class="text-[11px] text-slate-400 font-normal">Gestión de inventario y flujo de check-in/out.</span>
+                                    <span class="text-slate-900 block font-bold">02. Desarrollo Core/Backend PMS</span>
+                                    <div class="text-[11px] text-slate-400 font-normal">Reservas manuales y Calendario.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Flujo de check-in/out.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Reportes.</div>
                                 </td>
-                                <td class="p-6 text-right text-indigo-900">6 Sem</td>
+                                <td class="p-6 text-right text-indigo-900">12 Sem</td>
                             </tr>
                             <tr>
                                 <td class="p-6 text-slate-600">
                                     <span class="text-slate-900 block font-bold">03. Integración ARCA/AFIP</span>
-                                    <span class="text-[11px] text-slate-400 font-normal">Web Services, Factura Electrónica y Notas de Crédito.</span>
+                                    <div class="text-[11px] text-slate-400 font-normal">Web Services.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Facturas Electrónicas.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Envio de PDF por Email o Whatsapp.</div>
                                 </td>
                                 <td class="p-6 text-right text-indigo-900">2 Sem</td>
                             </tr>
                             <tr>
                                 <td class="p-6 text-slate-600">
                                     <span class="text-slate-900 block font-bold">04. Motor de Pago Online</span>
-                                    <span class="text-[11px] text-slate-400 font-normal">Interfaz de usuario y pasarelas bancarias.</span>
+                                    <div class="text-[11px] text-slate-400 font-normal">Interfaz de usuario.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Disponibilidad.</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">Pasarela de pago.</div>
                                 </td>
-                                <td class="p-6 text-right text-indigo-900">6 Sem</td>
+                                <td class="p-6 text-right text-indigo-900">8 Sem</td>
                             </tr>
                             <tr class="bg-slate-950 text-white">
                                 <td class="p-6 font-bold uppercase tracking-[0.2em] text-[10px]">Lanzamiento Estimado</td>
-                                <td class="p-6 text-right font-black text-indigo-400 italic">~16 Semanas</td>
+                                <td class="p-6 text-right font-black text-indigo-400 italic">~24 Semanas</td>
                             </tr>
                         </tbody>
                     </table>
@@ -260,88 +327,108 @@
             <section class="mb-24 page-break">
                 <div class="flex items-center gap-4 mb-12">
                     <span class="bg-slate-100 text-slate-400 font-bold px-3 py-1 rounded text-xs">04</span>
-                    <h2 class="text-slate-900 text-sm font-black uppercase tracking-[0.2em]">Alcances Técnicos y Reglas de Negocio</h2>
+                    <h2 class="text-slate-900 text-sm font-black uppercase tracking-[0.2em]">Lógica Operativa Específica</h2>
                 </div>
 
-                <!-- Contexto y Conductores -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                    <div class="md:col-span-2">
-                        <h3 class="text-xs font-black uppercase text-indigo-800 tracking-widest mb-4 italic">Contexto Operativo</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                            <strong>My Pod Capsule</strong> requiere una lógica de gestión por <strong>hora</strong> (no por noche), con alta rotación y una necesidad crítica de seguridad en el manejo de datos transaccionales. 
-                            <br>El sistema RoomDash actuará como el núcleo (Back-end) y el motor de reservas (Front-end).
-                        </p>
-                        <div class="flex flex-wrap gap-2">
-                            <span class="px-3 py-1 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-tighter rounded">Seguridad Inmutable</span>
-                            <span class="px-3 py-1 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-tighter rounded">Control de Trazabilidad</span>
-                            <span class="px-3 py-1 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-tighter rounded">Adecuación al Modelo</span>
+                <div class="grid grid-cols-1 gap-12 pl-4">
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Contexto Operativo & Administración
+                        </h3>
+                        <div class="grid gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>RoomDash está construido, desde su fundación, a medida para My Pod Capsule.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El núcleo (Back-end) y UI se desarrollan adaptandose a los detalles de su modelo operativo de gestión por hora.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El Panel de Administración centraliza la gestión de usuarios mediante roles y permisos específicos.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Dada la experiencia operativa previa de My Pod Capsule, RoomDash enfatiza la seguridad de usuarios.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Auditoría inmutable de todas las transacciones, garantizando trazabilidad en cada operación y sobre quién realizó cada movimiento.</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        <h4 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest text-center">Recursos a Gestionar</h4>
-                        <ul class="text-[11px] space-y-2 font-bold text-slate-700">
-                            <li class="flex justify-between border-b border-slate-200 pb-1"><span>Cápsulas</span></li>
-                            <li class="flex justify-between border-b border-slate-200 pb-1"><span>Salas Privadas</span></li>
-                            <li class="flex justify-between border-b border-slate-200 pb-1"><span>Duchas (M/H)</span></li>
-                            <li class="flex justify-between"><span>Lockers</span></li>
-                        </ul>
-                    </div>
-                </div>
 
-                <!-- Lógica de Bloques y Limpieza -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-                    <div class="p-8 bg-white border border-slate-200 rounded-3xl relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-bl-full"></div>
-                        <h3 class="text-sm font-black uppercase text-slate-900 mb-6 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor font-bold">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Gestión de Bloques Horarios
-                        </h3>
-                        <ul class="space-y-4 text-xs text-slate-600 leading-relaxed">
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.1.1</span> <p><strong>Bloques:</strong> Por hora. Con logica cada 1/2 hora.</p></li>
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.1.2</span> <p><strong>Limites:</strong> A definir min/max.</p></li>
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.1.3</span> <p><strong>Extensiones:</strong> A definir. Sujeto a ventana de limpieza.</p></li>
-                        </ul>
-                    </div>
 
-                    <div class="p-8 bg-white border border-slate-200 rounded-3xl relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-bl-full"></div>
-                        <h3 class="text-sm font-black uppercase text-slate-900 mb-6 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
                             Limpieza
                         </h3>
-                        <ul class="space-y-4 text-xs text-slate-600 leading-relaxed">
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.2.1</span> <p><strong>Obligatorio:</strong> 30 minutos post-checkout para cada recurso.</p></li>
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.2.2</span> <p><strong>Disponibilidad:</strong> El motor debe bloquear automáticamente extensiones/reservas si interfieren con limpiezas.</p></li>
-                            <li class="flex gap-3"><span class="text-indigo-300 font-bold font-mono">4.2.3</span> <p><strong>Reubicacion:</strong> A definir.</p></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Detalles Finales de Alcance -->
-                <div class="bg-slate-950 rounded-3xl p-10 text-white relative overflow-hidden">
-                    <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div>
-                            <h3 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6 italic">Estrategia de Venta y Canales</h3>
-                            <ul class="space-y-4 text-[11px] text-slate-400">
-                                <li class="flex items-start gap-3"><span class="text-indigo-500 font-bold">●</span> <p><strong class="text-slate-200">Canal Web Propio:</strong> El sitio funcionará como front comercial integrado directamente al núcleo RoomDash.</p></li>
-                                <li class="flex items-start gap-3"><span class="text-indigo-500 font-bold">●</span> <p><strong class="text-slate-200">OTAs & Agencias:</strong> Carga manual de reservas externas en esta fase (Sin Channel Manager incluido).</p></li>
-                                <li class="flex items-start gap-3"><span class="text-indigo-500 font-bold">●</span> <p><strong class="text-slate-200">Pasajeros:</strong> Carga completa del perfil hotelero por reserva para cumplimiento legal y seguridad.</p></li>
-                            </ul>
-                        </div>
-                        <div class="border-l border-slate-800 pl-0 md:pl-12">
-                            <h3 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6 italic">Términos de Implementación</h3>
-                            <p class="text-[11px] text-slate-400 leading-relaxed mb-6 italic">
-                                Cualquier funcionalidad o modificación de lógica de negocio solicitada con posterioridad a la aprobación de este documento y que no esté explícitamente detallada en estos alcances, será presupuestada como un <strong>Adicional de Desarrollo</strong> bajo tarifa de soporte evolutivo.
-                            </p>
-                            <div class="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
-                                <p class="text-[10px] font-bold text-indigo-300 leading-tight uppercase tracking-tighter">
-                                    El motor de disponibilidad es inteligente y autónomo; no requiere intervención manual para las reglas horarias y de limpieza.
-                                </p>
+                        <div class="grid  gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El sistema agrega un bloque de Limpieza despues de cada reserva.</span>
                             </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El motor de disponibilidad debe impedir la reserva de bloques asignados al tiempo de limpieza de un recurso.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Motor de Reservas
+                        </h3>
+                        <div class="grid  gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El motor de reserva debe solicitar datos completos del pasajero.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Solicitar fecha y hora, y mostrar disponibilidad de los recursos.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Redireccionar a la pasarela de pagos Mercado Pago.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Al finalizar, enviar email al pasajero con los detalles de la reserva.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Privacidad de la Información
+                        </h3>
+                        <div class="grid  gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>RoomDash garantiza que el 100% de la base de datos de pasajeros y transacciones es propiedad exclusiva de My Pod Capsule.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="mb-24 page-break">
+                <!-- Detalles Finales de Alcance -->
+                <div class="bg-slate-50 rounded-3xl p-10 text-slate-400">
+                    <div class="grid gap-12">
+                        <div class="pl-0">
+                            <h3 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Términos de Implementación</h3>
+                            <p class="text-[11px] text-slate-400 leading-relaxed italic">
+                                <!--Para asegurar que el sistema evolucione a la par de su negocio, cualquier requerimiento o ajuste de lógica no contemplado en este documento será gestionado como un <strong>Módulo de Desarrollo Adicional</strong> o bajo nuestra modalidad de Optimización Continua, garantizando siempre un presupuesto previo para su aprobación.-->
+                                Para asegurar que el sistema evolucione a la par del negocio, aquellas funcionalidades que surjan tras la firma de este acuerdo y que excedan los alcances aquí detallados, se integrarán a la hoja de ruta como <strong>Mejoras de Desarrollo Personalizadas</strong>, presupuestadas de forma independiente según la complejidad del requerimiento
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -354,155 +441,112 @@
                     <h2 class="text-slate-900 text-sm font-black uppercase tracking-[0.2em]">Modelo Económico</h2>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Columna de Filosofía -->
-                    <div class="space-y-6">
-                        <div class="p-8 bg-white border border-slate-200 rounded-3xl">
-                            <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest mb-4 italic">Servicio Mensual</h3>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                Bajo la modalidad SaaS, se establece un costo mensual único que cubre la totalidad de los servicios operativos necesarios:
-                            </p>
-                            <ul class="mt-4 space-y-2 text-[11px] font-bold text-slate-500 uppercase tracking-tight">
-                                <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div> Soporte Técnico y Help Desk</li>
-                                <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div> Actualizaciones Evolutivas</li>
-                                <li class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div> Infraestructura Cloud Segura</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Columna de Transparencia -->
-                    <div class="flex flex-col">
-                        <div class="py-5 px-8 bg-white border border-slate-200 rounded-3xl flex-grow flex flex-col justify-center">
-                            <div class="flex items-center gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-200" fill="text-indigo-200" viewBox="0 0 24 24" stroke="currentColor font-bold">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
-                                <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest italic">Evolucion a medida</h3>
+                <div class="grid grid-cols-1 gap-12 pl-4">
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Modalidad SaaS
+                        </h3>
+                        <div class="grid gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Se establece un costo mensual único que cubre la totalidad de los servicios operativos necesarios:</span>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                RoomDash es un ecosistema flexible que permite adaptaciones, mejoras y nuevos módulos según la evolución de su negocio. 
-                                Cualquier requerimiento de personalización o desarrollo de nuevas funcionalidades será analizado y presupuestado con total transparencia bajo una estructura de Horas/Hombre por perfil técnico, asegurando que el sistema crezca a la par de sus necesidades.
-                            </p>
-                            <!--div class="mt-auto pt-6 border-t border-indigo-400/30">
-                                <span class="text-[10px] font-black uppercase tracking-widest opacity-70 italic text-white">Core Principle:</span>
-                                <p class="text-xs font-bold mt-1">Costos auditables. Sin costos ocultos. Enfoque 100% en el rendimiento.</p>
-                            </div-->
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Soporte Técnico y Help Desk.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Infraestructura Cloud Server (Digital Ocean).</span> 
+                                <span>~$50 USD</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Actualizaciones Evolutivas, Deploy OPS. </span>
+                                <span>~$12 USD</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Tools, Repositorio de código Fuente.</span>
+                                <span>~$15 USD</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Bloque de Forma de Pago y Condiciones -->
-                <div class="bg-slate-50 border border-slate-200 rounded-3xl p-10 mt-6">
-                    <div class="flex items-center gap-3 mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        <h3 class="text-xs font-black uppercase text-slate-900 tracking-[0.2em]">Condiciones y Forma de Pago</h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="text-[12px] text-slate-600 space-y-4 leading-relaxed">
-                            <p>
-                                Los pagos del servicio mensual deberán ser realizados por <strong class="text-slate-900">débito automático en CBU</strong> (cuenta bancaria) o tarjeta de crédito en cuenta a los <strong>10 días corridos</strong> de emitida la factura.
-                            </p>
-                            <p>
-                                De no ser respetado este plazo o si por razones ajenas a <strong>RoomDash</strong> no es posible debitar el dinero, la mora será automática y devengará un interés equivalente al <strong class="text-red-600">6% mensual</strong> sobre el total de la factura (incremental según los días de impaga).
-                            </p>
-                        </div>
-                        <div class="text-[12px] text-slate-600 space-y-4 leading-relaxed">
-                            <p>
-                                El incumplimiento a partir del segundo mes facultará a <strong>RoomDash</strong> la <strong class="text-slate-900">suspensión de los servicios</strong> hasta su total regularización.
-                            </p>
-                            <!--div class="p-4 bg-white border border-indigo-100 rounded-xl">
-                                <p class="text-indigo-600 font-bold text-[10px] uppercase mb-1 tracking-wider">Cláusula Especial Ezeiza:</p>
-                                <p class="text-slate-800 font-semibold italic">
-                                    Para Mypodcapsule Ezeiza, en caso de que las cápsulas lleguen a un total de 50, no habrá modificación en el costo del servicio mensual.
-                                </p>
-                            </div-->
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Condiciones y Forma de Pago
+                        </h3>
+                        <div class="grid gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Los pagos del servicio mensual deberán ser realizados por <strong class="text-slate-900">transferencia a CBU</strong> (cuenta bancaria) a los <strong>10 días corridos</strong> de emitida la factura.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>De no ser respetado este plazo o si por razones ajenas a <strong>RoomDash</strong> no es posible debitar el dinero, la mora será automática y devengará un interés equivalente al <strong>6% mensual</strong> sobre el total de la factura (incremental según los días de impaga).</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>El incumplimiento a partir del segundo mes facultará a <strong>RoomDash</strong> la <strong class="text-slate-900">suspensión de los servicios</strong> hasta su total regularización.</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!--p class="mt-8 text-[10px] text-slate-400 italic text-center border-t border-slate-200 pt-6">
-                        RoomDash se reserva el derecho de cambiar las condiciones comerciales respecto a las bonificaciones en la presente cotización ante situaciones que lo ameriten.
-                    </p-->
-                </div>
 
-                <div class="p-8 bg-slate-900 text-slate-300 rounded-3xl border border-slate-800 mt-6">
-                    <h3 class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em] mb-4">Activación del Proyecto</h3>
-                    <p class="text-xs leading-relaxed">
-                        La validación de esta propuesta no determina el inicio inmediato de las tareas. El cronograma de ejecución se establecerá formalmente una vez que el pago del anticipo o el monto acordado se refleje en nuestra cuenta. A partir de ese hito, el equipo de consultoría definirá la fecha oficial de apertura del proyecto.
-                    </p>
-                </div>
-
-                <div class="p-8 bg-white border border-slate-200 rounded-3xl text-slate-600 mt-6">
-                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4 italic">Dinámica de Trabajo y Entregas</h3>
-                    <p class="text-xs leading-relaxed mb-4">
-                        Las horas presupuestadas son una proyección basada en el relevamiento actual. Factores como ajustes en circuitos operativos o cambios en el alcance pueden derivar en variaciones horarias.
-                    </p>
-                    <p class="text-xs leading-relaxed italic border-l-2 border-indigo-500 pl-4">
-                        En ausencia de un acta de cierre formal, el sistema se considerará en etapa productiva (activando el abono mensual) al detectar 50 transacciones operativas (ventas, compras o movimientos de stock).
-                    </p>
-                    <!--div class="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-900 uppercase">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        Capacitaciones en formato video
-                    </div-->
+                    <div class="group">
+                        <h3 class="flex items-center gap-3 font-bold text-slate-900 text-sm uppercase mb-6 tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                            Activación del Proyecto
+                        </h3>
+                        <div class="grid gap-x-12 gap-y-3 text-[13px] text-slate-600 ml-5">
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>La validación de esta propuesta no determina el inicio inmediato de las tareas. El cronograma de ejecución se establecerá formalmente una vez que el pago del anticipo o el monto acordado se refleje en nuestra cuenta. A partir de ese hito, el equipo de consultoría definirá la fecha oficial de apertura del proyecto.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span>Las horas presupuestadas son una proyección basada en el relevamiento actual. Factores como ajustes en circuitos operativos o cambios en el alcance pueden derivar en variaciones horarias.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="text-indigo-400 font-bold">›</span>
+                                <span> En ausencia de un acta de cierre formal, el sistema se considerará en etapa productiva (activando el abono mensual) al detectar 50 transacciones operativas (ventas, compras o movimientos de stock).</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- 04. Inversión -->
-            <section class="mb-12">
+            <section class="mb-12 page-break">
                 <div class="flex items-center gap-4 mb-12">
-                    <span class="bg-slate-100 text-slate-400 font-bold px-3 py-1 rounded text-xs">04</span>
+                    <span class="bg-slate-100 text-slate-400 font-bold px-3 py-1 rounded text-xs">06</span>
                     <h2 class="text-slate-900 text-sm font-black uppercase tracking-[0.2em]">Inversión Estimada</h2>
                 </div>
                 
-                <div class="bg-slate-950 text-white rounded-3xl p-12 flex flex-col md:flex-row justify-between items-center gap-10 shadow-2xl relative overflow-hidden mb-12">
+                <!-- Clase force-row-print añadida aquí -->
+                <div class="force-row-print bg-slate-50 text-slate-950 rounded-3xl p-12 flex flex-row justify-between 
+                    items-center shadow-sm relative overflow-hidden mb-12">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-300/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                    <div class="text-center md:text-left relative z-10">
-                        <p class="text-indigo-400 uppercase tracking-widest text-[10px] mb-3 font-black">Implementación Core</p>
-                        <p class="text-6xl font-black tracking-tighter italic">USD 1000</p>
-                        <p class="text-slate-500 text-[10px] mt-2 font-bold uppercase tracking-widest">Pago único por despliegue</p>
+                    
+                    <div class="text-right relative z-10">
+                        <p class="text-indigo-500 uppercase tracking-widest text-[10px] mb-3 font-black">Etapa de Implementación</p>
+                        <p class="text-4xl font-black italic">USD 1600 <span class="text-sm font-bold text-slate-400">/ mes</span></p>
+                        <p class="text-slate-500 text-[10px] mt-2 font-bold uppercase tracking-widest">Meses de desarrollo inicial.</p>
                     </div>
-                    <div class="h-px w-full md:h-16 md:w-px bg-slate-800"></div>
-                    <div class="text-center md:text-right relative z-10">
-                        <p class="text-indigo-400 uppercase tracking-widest text-[10px] mb-3 font-black">Soporte & Cloud</p>
-                        <p class="text-3xl font-light text-slate-200 tracking-tighter italic">USD 400 <span class="text-sm font-bold text-slate-500">/ mes</span></p>
-                        <p class="text-slate-500 text-[10px] mt-2 font-bold uppercase tracking-widest">Mantenimiento evolutivo</p>
+
+                    <!-- Divider con clase específica para impresión -->
+                    <div class="vertical-divider-print h-px w-full md:h-16 md:w-px bg-slate-300"></div>
+
+                    <div class="text-left relative z-10">
+                        <p class="text-indigo-500 uppercase tracking-widest text-[10px] mb-3 font-black">Servicio SaaS & Cloud</p>
+                        <p class="text-3xl font-black italic">USD 700 <span class="text-sm font-bold text-slate-400">/ mes</span></p>
+                        <p class="text-slate-500 text-[10px] mt-2 font-bold uppercase tracking-widest">Abono post-lanzamiento.</p>
                     </div>
-                </div>
-
-                TODO: Remarcar que es "a medida", recuperar el motor de reservas.
-
-                CRUD: Servicios
-
-                Sacar lo de extensiones, y lo de Housekeeping
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-2 tracking-widest">Infraestructura</p>
-                        <p class="font-black text-slate-900 text-xl tracking-tighter">~$45 USD</p>
-                        <p class="text-[9px] text-slate-400 mt-1 uppercase font-medium">Cloud Server (DO)</p>
-                    </div>
-                    <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-2 tracking-widest">Deploy Ops</p>
-                        <p class="font-black text-slate-900 text-xl tracking-tighter">~$12 USD</p>
-                        <p class="text-[9px] text-slate-400 mt-1 uppercase font-medium">Laravel Forge</p>
-                    </div>
-                    <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase mb-2 tracking-widest">Ecosistema</p>
-                        <p class="font-black text-slate-900 text-xl tracking-tighter">~$5 USD</p>
-                        <p class="text-[9px] text-slate-400 mt-1 uppercase font-medium">Tools & Repos</p>
-                    </div>
-                </div>
-
-                <div class="p-6 bg-indigo-50/50 rounded-2xl border-l-4 border-indigo-500">
-                    <p class="text-slate-500 text-[10px] leading-relaxed font-bold uppercase tracking-tight">
-                        * Nota: Los costos de terceros (Hosting/Ops) son estimados y se facturan directamente a la cuenta del titular para total independencia del software.
-                    </p>
                 </div>
             </section>
+
         </main>
 
         <!-- Footer -->

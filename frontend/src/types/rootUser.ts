@@ -15,6 +15,8 @@ export interface CreateRootUserInput {
   last_name: string;
   username: string;
   email: string;
+  password: string;
+  password_confirmation: string;
   //avatarPath: string;
 }
 
@@ -23,6 +25,8 @@ export interface UpdateRootUserInput {
   last_name: string;
   email: string;
   username: string;
+  password: string;
+  password_confirmation: string;
   //avatarPath: string;
   //twoFactorEnabled: boolean;
 }

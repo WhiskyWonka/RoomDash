@@ -47,6 +47,12 @@ export async function request<T>(url: string, options?: RequestInit): Promise<T>
         if (res.status === 401) {
             throw new Error("UNAUTHORIZED");
         }
+
+        if (res.status === 422 && body.errors) {
+            console.group("❌ VALIDATION ERROR DETAILS");
+            console.table(body.errors);
+            console.groupEnd();
+        }
         
         throw new Error(body?.message ?? `Error ${res.status}: Server Error`);
     }

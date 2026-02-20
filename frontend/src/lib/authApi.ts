@@ -31,6 +31,8 @@ export const authApi = {
             method: "GET",
         }),
 
+    setup2FA: () => request<any>("/api/auth/2fa/setup"),
+
     confirm2FA: (code: string) =>
         request<any>(`${AUTH_BASE}/2fa/confirm`, {
             method: "POST",
