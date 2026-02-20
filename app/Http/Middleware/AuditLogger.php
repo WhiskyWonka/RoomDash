@@ -74,17 +74,21 @@ class AuditLogger
             }
         }
 
-        $this->auditLogRepository->create(new AuditLog(
-            id: $this->uuidGenerator->generate(),
-            userId: $request->session()->get('admin_user_id') ?? null,
-            action: $action,
-            entityType: $entityType,
-            entityId: $entityId,
-            oldValues: $oldValues,
-            newValues: $newValues,
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-            createdAt: new DateTimeImmutable,
-        ));
+        $userId = $request->session()->get('admin_user_id');
+
+        if($userId) {
+            $this->auditLogRepository->create(new AuditLog(
+                id: $this->uuidGenerator->generate(),
+                userId: $userId,
+                action: $action,
+                entityType: $entityType,
+                entityId: $entityId,
+                oldValues: $oldValues,
+                newValues: $newValues,
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent(),
+                createdAt: new DateTimeImmutable,
+            ));
+        }
     }
 }

@@ -58,8 +58,9 @@ class LoginController extends Controller implements LoginEndpoints
         $request->session()->regenerate();
         Auth::guard('admin')->loginUsingId($rootUser->id);
 
-        $request->session()->put('2fa_verificated', false);
+        $request->session()->put('2fa_verified', false);
         $request->session()->put('admin_user_id', $rootUser->id);
+        $request->session()->put('2fa_pending', true);
 
         $notConfirmed = $rootUser->twoFactorConfirmedAt ? false : true;
 
@@ -93,6 +94,7 @@ class LoginController extends Controller implements LoginEndpoints
         }
 
         $request->session()->put('2fa_verified', true);
+        $request->session()->put('2fa_pending', false);
 
         $user = $this->users->findById($userId);
 
