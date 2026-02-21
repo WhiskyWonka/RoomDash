@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Landing() {
   const [hotelName, setHotelName] = useState<string>("");
@@ -12,8 +12,8 @@ export default function Landing() {
         setError(null);
 
         // 1. Extraer el subdominio (ej: "mypod" de "mypod.roomdash.test")
-        const hostname = window.location.hostname;
-        const slug = hostname.split('.')[0];
+        // const hostname = window.location.hostname;
+        // const slug = hostname.split('.')[0];
 
         // 2. Fetch al backend (Ajusta la URL a tu endpoint real de Laravel)
         const response = await fetch('/api/public/info', { // URL actualizada
