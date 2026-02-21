@@ -74,7 +74,7 @@ export default function VerifyRootUserPage() {
                             <p className="text-sm">ROOT_USER_VERIFIED_AND_SECURED</p>
                         </CardContent>
                         <CardFooter>
-                            <Button onClick={() => navigate("/superadmin/login")} className="w-full">
+                            <Button onClick={() => navigate("/admin/login")} className="w-full">
                                 PROCEED_TO_LOGIN
                             </Button>
                         </CardFooter>

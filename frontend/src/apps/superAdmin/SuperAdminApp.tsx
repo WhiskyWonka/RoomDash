@@ -80,7 +80,7 @@ function SuperAdminApp() {
                 path="login" 
                 element={
                     isAuthenticated 
-                        ? <Navigate to="/superadmin/dashboard" replace /> 
+                        ? <Navigate to="/admin/dashboard" replace /> 
                         : <LoginPage onLoginSuccess={checkAuth} /> 
                 }
             />

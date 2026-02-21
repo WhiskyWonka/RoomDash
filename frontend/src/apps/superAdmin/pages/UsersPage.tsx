@@ -22,7 +22,7 @@ export default function UsersPage() {
         rootUsersApi.list()
             .then((response: any) => {
                 console.log("LOAD_USERS_RESPONSE:", response);
-                const usersArray = response.data?.users || [];
+                const usersArray = response.data?.items || [];
                 setUsers(usersArray);
             })
             .catch(err => {
