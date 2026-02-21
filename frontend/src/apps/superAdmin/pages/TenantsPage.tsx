@@ -18,7 +18,8 @@ export default function TenantsPage() {
     const load = () => {
         tenantsApi.list()
         .then((response:any) => {
-            const tenantsArray = response.data || [];
+            console.log("LOAD_TENANTS_RESPONSE:", response);
+            const tenantsArray = response.data?.items || [];
             setTenants(tenantsArray);
         })
         .catch((error) => {

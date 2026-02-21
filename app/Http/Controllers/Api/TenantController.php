@@ -22,7 +22,11 @@ class TenantController extends Controller implements TenantEndpoints
 
     public function index(): JsonResponse
     {
-        return $this->success($this->tenants->findAll());
+        $data = [
+            'items' => $this->tenants->findAll(),
+        ];
+
+        return $this->success($data);
     }
 
     public function show(string $id): JsonResponse

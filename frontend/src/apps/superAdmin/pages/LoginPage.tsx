@@ -41,7 +41,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             } else {
                 console.log("LOGIN_EXITOSO_SIN_2FA");
                 await onLoginSuccess(); 
-                navigate("/superadmin/dashboard", { replace: true });
+                navigate("/admin/dashboard", { replace: true });
             }
         } catch (error: any) {
             console.error("ERROR_EN_LOGIN:", error);
@@ -60,7 +60,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             }
             
             await onLoginSuccess();
-            navigate("/superadmin/dashboard", { replace: true });
+            navigate("/admin/dashboard", { replace: true });
             
             /*setTimeout(() => {
                 navigate("/superadmin/dashboard", { replace: true });
