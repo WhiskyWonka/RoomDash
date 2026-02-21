@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -7,38 +9,57 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Infrastructure\Auth\Models\User>
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = \Infrastructure\Auth\Models\User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'username' => $this->faker->unique()->regexify('[a-z]{3,8}_[a-z]{3,8}'),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'password' => Hash::make('password'),
+            'avatar_path' => null,
+            'is_active' => true,
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'two_factor_secret' => null,
+            'two_factor_enabled' => false,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+
+    public function withTwoFactor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_enabled' => true,
+            'two_factor_confirmed_at' => now(),
+        ]);
+    }
+
+    public function withAvatar(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'avatar_path' => 'avatars/'.Str::uuid().'.webp',
         ]);
     }
 }

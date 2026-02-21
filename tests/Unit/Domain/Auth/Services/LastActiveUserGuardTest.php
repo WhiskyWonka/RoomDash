@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Domain\Auth\Services\LastActiveUserGuard;
 
 it('allows deletion when multiple active users exist', function () {
     // Arrange
-    $repository = Mockery::mock(RootUserRepositoryInterface::class);
+    $repository = Mockery::mock(UserRepositoryInterface::class);
     $repository->shouldReceive('countActive')->once()->andReturn(3);
 
     $guard = new LastActiveUserGuard($repository);
@@ -18,7 +18,7 @@ it('allows deletion when multiple active users exist', function () {
 
 it('prevents deletion when only one active user exists', function () {
     // Arrange
-    $repository = Mockery::mock(RootUserRepositoryInterface::class);
+    $repository = Mockery::mock(UserRepositoryInterface::class);
     $repository->shouldReceive('countActive')->once()->andReturn(1);
 
     $guard = new LastActiveUserGuard($repository);
@@ -30,7 +30,7 @@ it('prevents deletion when only one active user exists', function () {
 
 it('allows deactivation when multiple active users exist', function () {
     // Arrange
-    $repository = Mockery::mock(RootUserRepositoryInterface::class);
+    $repository = Mockery::mock(UserRepositoryInterface::class);
     $repository->shouldReceive('countActive')->once()->andReturn(2);
 
     $guard = new LastActiveUserGuard($repository);
@@ -41,7 +41,7 @@ it('allows deactivation when multiple active users exist', function () {
 
 it('prevents deactivation when only one active user exists', function () {
     // Arrange
-    $repository = Mockery::mock(RootUserRepositoryInterface::class);
+    $repository = Mockery::mock(UserRepositoryInterface::class);
     $repository->shouldReceive('countActive')->once()->andReturn(1);
 
     $guard = new LastActiveUserGuard($repository);

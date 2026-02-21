@@ -8,14 +8,14 @@ use Application\EmailVerification\DTOs\VerifyEmailRequest;
 use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
 use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Domain\Shared\Ports\PasswordHasherInterface;
 
 class VerifyEmailUseCase
 {
     public function __construct(
         private readonly EmailVerificationTokenRepositoryInterface $tokenRepository,
-        private readonly RootUserRepositoryInterface $userRepository,
+        private readonly UserRepositoryInterface $userRepository,
         private readonly PasswordHasherInterface $passwordHasher,
     ) {}
 

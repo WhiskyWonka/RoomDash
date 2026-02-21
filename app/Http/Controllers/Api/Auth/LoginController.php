@@ -14,13 +14,13 @@ use Application\Login\DTOs\CreateLoginReesponse;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Infrastructure\Auth\Adapters\EloquentRootUserRepository;
+use Infrastructure\Auth\Adapters\EloquentUserRepository;
 use Infrastructure\Shared\Adapters\LaravelPasswordHasher;
 
 class LoginController extends Controller implements LoginEndpoints
@@ -28,10 +28,10 @@ class LoginController extends Controller implements LoginEndpoints
     use ApiResponse;
 
     public function __construct(
-        private readonly RootUserRepositoryInterface $users,
+        private readonly UserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
-        private readonly EloquentRootUserRepository $rootUserRepository,
+        private readonly EloquentUserRepository $userRepository,
         private readonly LaravelPasswordHasher $hasherService,
     ) {}
 
@@ -39,7 +39,7 @@ class LoginController extends Controller implements LoginEndpoints
     {
         // Check if user exists with this email before verifying password
         // We need the Eloquent model to check is_active and email_verified_at
-        $rootUser = $this->rootUserRepository->findByEmail($request['email']);
+        $rootUser = $this->userRepository->findByEmail($request['email']);
 
         if (! $rootUser || ! $rootUser->password || ! $this->hasherService->check($request['password'], $rootUser->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);

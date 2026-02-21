@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Domain\Auth\Services;
 
 use Domain\Auth\Exceptions\LastActiveUserException;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 
 class LastActiveUserGuard
 {
     public function __construct(
-        private readonly RootUserRepositoryInterface $repository,
+        private readonly UserRepositoryInterface $repository,
     ) {}
 
     /**

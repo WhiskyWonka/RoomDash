@@ -19,7 +19,7 @@ class EmailVerificationTokenFactory extends Factory
         $rawToken = Str::random(64);
 
         return [
-            'user_id' => \Infrastructure\Auth\Models\RootUser::factory(),
+            'user_id' => \Infrastructure\Auth\Models\User::factory(),
             'token' => hash('sha256', $rawToken),
             'expires_at' => now()->addHours(24),
             'created_at' => now(),

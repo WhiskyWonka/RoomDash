@@ -8,13 +8,13 @@ use Domain\Auth\Ports\EmailVerificationServiceInterface;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Infrastructure\Auth\Models\EmailVerificationToken;
-use Infrastructure\Auth\Models\RootUser;
+use Infrastructure\Auth\Models\User;
 
 class EmailVerificationService implements EmailVerificationServiceInterface
 {
     public function sendVerificationEmail(string $userId): void
     {
-        $user = RootUser::findOrFail($userId);
+        $user = User::findOrFail($userId);
         $rawToken = Str::random(64);
         $hashedToken = hash('sha256', $rawToken);
 

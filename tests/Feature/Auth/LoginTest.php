@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Infrastructure\Auth\Models\RootUser;
+use Infrastructure\Auth\Models\User;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    RootUser::factory()->create([
+    User::factory()->create([
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
         'email_verified_at' => now(),
