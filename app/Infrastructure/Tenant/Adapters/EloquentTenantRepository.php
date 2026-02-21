@@ -49,6 +49,18 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         return $this->toEntity($model);
     }
 
+    public function deacttivate(string $id): void
+    {
+        $model = TenantModel::findOrFail($id);
+        $model->update(['is_active' => false]);
+    }
+
+    public function activate(string $id): void
+    {
+        $model = TenantModel::findOrFail($id);
+        $model->update(['is_active' => true]);
+    }
+
     public function delete(string $id): void
     {
         $model = TenantModel::findOrFail($id);

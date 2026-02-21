@@ -18,5 +18,9 @@ interface TenantRepositoryInterface
 
     public function update(string $id, string $name, string $domain): Tenant;
 
+    public function deactivate(string $id): void;
+
+    public function activate(string $id): void;
+
     public function delete(string $id): void;
 }

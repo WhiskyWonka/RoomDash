@@ -58,6 +58,20 @@ class TenantController extends Controller implements TenantEndpoints
         return $this->success($tenant, 'Tenant updated');
     }
 
+    public function deactivate(string $id): JsonResponse
+    {
+        $this->tenants->deactivate($id);
+
+        return $this->success(null, 'Tenant deactivated');
+    }
+
+    public function activate(string $id): JsonResponse
+    {
+        $this->tenants->activate($id);
+
+        return $this->success(null, 'Tenant activated');
+    }
+
     public function destroy(string $id): JsonResponse
     {
         $this->tenants->delete($id);
