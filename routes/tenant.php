@@ -18,8 +18,9 @@ Route::middleware([
 
     Route::get('/public/info', function () {
         return response()->json([
-            'name' => tenant('name'), // O la columna donde guardes el nombre
+            'status' => 'ok',
             'id' => tenant('id'),
+            'name' => tenant('name'),
         ]);
     });
 });

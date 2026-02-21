@@ -27,12 +27,12 @@ export default defineConfig({
         },
         proxy: {
             '/api': {
-                target: 'http://localhost:80',
-                changeOrigin: true,
+                target: 'http://backend:80',
+                changeOrigin: false,
             },
             '/sanctum': {
-                target: 'http://localhost:80',
-                changeOrigin: true,
+                target: 'http://backend:80',
+                changeOrigin: false,
             },
         },
     },
