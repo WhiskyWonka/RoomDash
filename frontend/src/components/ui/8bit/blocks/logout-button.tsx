@@ -10,7 +10,7 @@ export function LogoutButton() {
             console.error("Error al cerrar sesión en el servidor", error);
         } finally {
             // 2. Limpiar y redirigir (Forzamos recarga para limpiar todo el estado de React)
-            window.location.href = "/superadmin/login";
+            window.location.href = "/admin/login";
         }
     };
 
