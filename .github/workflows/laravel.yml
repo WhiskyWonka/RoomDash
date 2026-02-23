@@ -10,6 +10,8 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 10
+
     services:
       # Postgres 18.1 según tu entorno
       postgres:
@@ -77,7 +79,7 @@ jobs:
       run: |
         php artisan config:clear
         php artisan migrate --force --env=testing
-        php artisan test --exclude-group=architecture
+        php artisan test --exclude-group=architecture --stop-on-failure
       env:
         DB_CONNECTION: pgsql
         DB_HOST: 127.0.0.1
@@ -86,3 +88,7 @@ jobs:
         DB_USERNAME: postgres
         DB_PASSWORD: password
         APP_KEY: ${{ secrets.APP_KEY || 'base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=' }} 
+        MAIL_MAILER: log
+        QUEUE_CONNECTION: sync
+        SESSION_DRIVER: array
+        CACHE_STORE: array
