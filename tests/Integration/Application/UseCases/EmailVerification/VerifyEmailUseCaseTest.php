@@ -7,7 +7,7 @@ use Application\EmailVerification\UseCases\VerifyEmailUseCase;
 use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
 use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Domain\Auth\ValueObjects\EmailVerificationToken;
 use Domain\Shared\Ports\PasswordHasherInterface;
 
@@ -25,7 +25,7 @@ it('sets email verified at and password on valid token', function () {
     );
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $passwordHasher->shouldReceive('hash')->once()->andReturn('hashed-password');
@@ -59,7 +59,7 @@ it('consumes token after verification', function () {
     );
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $passwordHasher->shouldReceive('hash')->once()->andReturn('hashed-password');
@@ -95,7 +95,7 @@ it('throws exception for expired token', function () {
     );
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $tokenRepository->shouldReceive('findByHashedToken')->with($hashedToken)->andReturn($expiredToken);
@@ -119,7 +119,7 @@ it('throws exception when token does not exist', function () {
     $hashedToken = hash('sha256', $rawToken);
 
     $tokenRepository = Mockery::mock(EmailVerificationTokenRepositoryInterface::class);
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $passwordHasher = Mockery::mock(PasswordHasherInterface::class);
 
     $tokenRepository->shouldReceive('findByHashedToken')->with($hashedToken)->andReturn(null);

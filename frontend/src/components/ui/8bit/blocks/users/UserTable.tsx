@@ -1,4 +1,4 @@
-import type { RootUser as User } from "@/types/rootUser";
+import type { User } from "@/types/user";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/8bit/table";
 import { Button } from "@/components/ui/8bit/button";
 

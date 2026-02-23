@@ -5,8 +5,8 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\Auth\VerifyEmailController;
 use App\Http\Controllers\Api\HealthController;
-use App\Http\Controllers\Api\RootUserController;
 use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Central API routes - restricted to central domains only
@@ -16,21 +16,21 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
 
         // Public auth routes with rate limiting
         Route::middleware(['web', 'throttle:login'])->group(function () {
-            Route::post('/auth/login', [LoginController::class, 'login'])->middleware('audit.log:root_user,root_users');
-            Route::post('/auth/verify-email', VerifyEmailController::class)->middleware('audit.log:root_user,root_users');
+            Route::post('/auth/login', [LoginController::class, 'login'])->middleware('audit.log:user,users');
+            Route::post('/auth/verify-email', VerifyEmailController::class)->middleware('audit.log:user,users');
         });
 
         // Authenticated routes (no 2FA required yet)
         Route::middleware('web')->group(function () {
-            Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware('audit.log:root_user,root_users');
+            Route::post('/auth/logout', [LoginController::class, 'logout'])->middleware('audit.log:user,users');
             Route::get('/auth/me', [LoginController::class, 'me']);
 
             // 2FA verification with rate limiting
             Route::middleware('throttle:2fa')->group(function () {
-                Route::post('/auth/verify-2fa', [LoginController::class, 'verify2fa'])->middleware('audit.log:root_user,root_users');
-                Route::post('/auth/verify-recovery', [LoginController::class, 'verifyRecoveryCode'])->middleware('audit.log:root_user,root_users');
-                Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('audit.log:root_user,root_users');
-                Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup'])->middleware('audit.log:root_user,root_users');
+                Route::post('/auth/verify-2fa', [LoginController::class, 'verify2fa'])->middleware('audit.log:user,users');
+                Route::post('/auth/verify-recovery', [LoginController::class, 'verifyRecoveryCode'])->middleware('audit.log:user,users');
+                Route::post('/auth/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('audit.log:user,users');
+                Route::get('/auth/2fa/setup', [TwoFactorController::class, 'setup'])->middleware('audit.log:user,users');
                 Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
             });
         });
@@ -38,29 +38,33 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
         // Protected routes (requires 2FA verification)
         Route::middleware(['web', 'require.2fa'])->group(function () {
             Route::apiResource('tenants', TenantController::class);
+            Route::patch('/tenants/{id}/activate', [TenantController::class, 'activate']);
+            Route::patch('/tenants/{id}/deactivate', [TenantController::class, 'deactivate']);
 
-            // Root User CRUD
-            Route::get('/root-users', [RootUserController::class, 'index']);
-            Route::get('/root-users/{id}', [RootUserController::class, 'show']);
-            Route::post('/root-users', [RootUserController::class, 'store'])->middleware('audit.log:root_user,root_users');
-            Route::put('/root-users/{id}', [RootUserController::class, 'update'])->middleware('audit.log:root_user,root_users');
-            Route::patch('/root-users/{id}/password', [RootUserController::class, 'changePassword'])->middleware('audit.log:root_user,root_users');
-            Route::delete('/root-users/{id}', [RootUserController::class, 'destroy'])->middleware('audit.log:root_user,root_users');
+            // User CRUD
+            Route::get('/users', [UserController::class, 'index']);
+            Route::get('/users/{id}', [UserController::class, 'show']);
+            Route::post('/users', [UserController::class, 'store'])->middleware('audit.log:user,users');
+            Route::put('/users/{id}', [UserController::class, 'update'])->middleware('audit.log:user,users');
+            Route::patch('/users/{id}/password', [UserController::class, 'changePassword'])->middleware('audit.log:user,users');
+            Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('audit.log:user,users');
 
-            // Root User Activation / Deactivation
-            Route::patch('/root-users/{id}/deactivate', [RootUserController::class, 'deactivate'])->middleware('audit.log:root_user,root_users');
-            Route::patch('/root-users/{id}/activate', [RootUserController::class, 'activate'])->middleware('audit.log:root_user,root_users');
+            // User Activation / Deactivation
+            Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivate'])->middleware('audit.log:user,users');
+            Route::patch('/users/{id}/activate', [UserController::class, 'activate'])->middleware('audit.log:user,users');
 
-            // Root User Resend Verification
-            Route::post('/root-users/{id}/resend-verification', [RootUserController::class, 'resendVerification'])->middleware('audit.log:root_user,root_users');
+            // User Resend Verification
+            Route::post('/users/{id}/resend-verification', [UserController::class, 'resendVerification'])->middleware('audit.log:user,users');
 
-            // Root User Avatar
-            Route::post('/root-users/{id}/avatar', [RootUserController::class, 'uploadAvatar'])->middleware('audit.log:root_user,root_users');
-            Route::delete('/root-users/{id}/avatar', [RootUserController::class, 'deleteAvatar'])->middleware('audit.log:root_user,root_users');
+            // User Avatar
+            Route::post('/users/{id}/avatar', [UserController::class, 'uploadAvatar'])->middleware('audit.log:user,users');
+            Route::delete('/users/{id}/avatar', [UserController::class, 'deleteAvatar'])->middleware('audit.log:user,users');
 
             // Audit Logs (read-only)
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
             Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
+
+            Route::post('/tenants/{tenantId}/create-admin', [TenantController::class, 'createTenantAdmin'])->middleware('audit.log:user,users');
 
             // Audit logs are immutable - return 405 for modification attempts
             Route::match(['put', 'patch', 'delete'], '/audit-logs/{id}', function () {

@@ -43,7 +43,7 @@ function SuperAdminApp() {
                         : <LoginPage onLoginSuccess={checkAuth} /> 
                 }
             />
-            <Route path="verify-email" element={<VerifyRootUserPage />} />
+            <Route path="verify-email" element={<VerifyUserPage />} />
 
             <Route 
                 path="/" 

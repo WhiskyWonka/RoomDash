@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Infrastructure\AuditLog\Models\AuditLog;
-use Tests\Helpers\ActsAsAuthenticatedRootUser;
+use Tests\Helpers\ActsAsAuthenticatedUser;
 
-uses(RefreshDatabase::class, ActsAsAuthenticatedRootUser::class);
+uses(RefreshDatabase::class, ActsAsAuthenticatedUser::class);
 
 // =========================================================================
 // Authorization
@@ -22,7 +22,7 @@ it('returns 401 when unauthenticated accessing audit logs', function () {
 
 it('returns 403 with 2FA_REQUIRED when 2fa not verified for audit logs', function () {
     // Arrange
-    $this->actingAsRootUserPending2FA();
+    $this->actingAsUserPending2FA();
 
     // Act
     $response = $this->getJson('/api/audit-logs');
@@ -38,7 +38,7 @@ it('returns 403 with 2FA_REQUIRED when 2fa not verified for audit logs', functio
 
 it('returns 200 with paginated audit logs', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
     AuditLog::factory()->count(5)->create();
 
     // Act
@@ -58,7 +58,7 @@ it('returns 200 with paginated audit logs', function () {
 
 it('returns audit logs newest first', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     $oldLog = AuditLog::factory()->create(['created_at' => now()->subDays(2)]);
     $newLog = AuditLog::factory()->create(['created_at' => now()->subDay()]);
@@ -75,7 +75,7 @@ it('returns audit logs newest first', function () {
 
 it('returns audit logs filtered by user id', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     $specificUserId = \Illuminate\Support\Str::uuid()->toString();
     AuditLog::factory()->forUser($specificUserId)->create();
@@ -93,7 +93,7 @@ it('returns audit logs filtered by user id', function () {
 
 it('returns audit logs filtered by action', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     AuditLog::factory()->forAction('root_user.created')->create();
     AuditLog::factory()->forAction('auth.login')->create();
@@ -110,7 +110,7 @@ it('returns audit logs filtered by action', function () {
 
 it('returns audit logs filtered by date range', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     AuditLog::factory()->create(['created_at' => '2026-01-15 12:00:00']);
     AuditLog::factory()->create(['created_at' => '2026-02-01 12:00:00']); // Outside range
@@ -126,7 +126,7 @@ it('returns audit logs filtered by date range', function () {
 
 it('returns audit logs filtered by entity type', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     AuditLog::factory()->forEntityType('root_user')->create();
     AuditLog::factory()->forEntityType('tenant')->create();
@@ -147,7 +147,7 @@ it('returns audit logs filtered by entity type', function () {
 
 it('returns 200 for get single audit log', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
     $log = AuditLog::factory()->create();
 
     // Act
@@ -160,7 +160,7 @@ it('returns 200 for get single audit log', function () {
 
 it('returns 404 when audit log not found', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
 
     // Act
     $response = $this->getJson('/api/audit-logs/nonexistent-uuid');
@@ -175,7 +175,7 @@ it('returns 404 when audit log not found', function () {
 
 it('returns 405 for put on audit logs', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
     $log = AuditLog::factory()->create();
 
     // Act
@@ -187,7 +187,7 @@ it('returns 405 for put on audit logs', function () {
 
 it('returns 405 for patch on audit logs', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
     $log = AuditLog::factory()->create();
 
     // Act
@@ -199,7 +199,7 @@ it('returns 405 for patch on audit logs', function () {
 
 it('returns 405 for delete on audit logs', function () {
     // Arrange
-    $this->actingAsVerifiedRootUser();
+    $this->actingAsVerifiedUser();
     $log = AuditLog::factory()->create();
 
     // Act

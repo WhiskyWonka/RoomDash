@@ -7,12 +7,12 @@ namespace Application\EmailVerification\UseCases;
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
 use Domain\Auth\Ports\EmailVerificationServiceInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 
 class ResendVerificationUseCase
 {
     public function __construct(
-        private readonly RootUserRepositoryInterface $userRepository,
+        private readonly UserRepositoryInterface $userRepository,
         private readonly EmailVerificationServiceInterface $emailService,
     ) {}
 

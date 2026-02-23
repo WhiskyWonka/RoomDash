@@ -133,7 +133,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Schema(
-    schema: 'RootUserSummary',
+    schema: 'UserSummary',
     type: 'object',
     required: ['id', 'username', 'firstName', 'lastName', 'email', 'isActive', 'createdAt'],
     properties: [
@@ -148,7 +148,7 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Schema(
-    schema: 'RootUserDetail',
+    schema: 'UserDetail',
     type: 'object',
     required: ['id', 'username', 'firstName', 'lastName', 'email', 'isActive', 'twoFactorEnabled', 'createdAt'],
     properties: [

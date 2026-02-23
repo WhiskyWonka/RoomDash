@@ -13,6 +13,8 @@ final class Tenant implements JsonSerializable
         public readonly string $id,
         public readonly string $name,
         public readonly string $domain,
+        public readonly string $plan,
+        public readonly bool $isActive,
         public readonly DateTimeImmutable $createdAt,
     ) {}
 
@@ -22,6 +24,8 @@ final class Tenant implements JsonSerializable
             'id' => $this->id,
             'name' => $this->name,
             'domain' => $this->domain,
+            'plan' => $this->plan,
+            'isActive' => $this->isActive,
             'createdAt' => $this->createdAt->format('c'),
         ];
     }
