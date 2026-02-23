@@ -10,6 +10,17 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    # Declarar env aquí arriba hace que TODOS los steps las usen, incluyendo el setup de PHP y la instalación de dependencias
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      # Usar una key fija evita fallos de sesión/auth en los tests de Feature
+      APP_KEY: base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=
+
     services:
       # Postgres 18.1 según tu entorno
       postgres:
@@ -60,13 +71,6 @@ jobs:
         cp .env.example .env
         # Ajustamos el .env para usar Postgres en el CI
         php artisan key:generate
-      env:
-        DB_CONNECTION: pgsql
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
-        DB_DATABASE: testing
-        DB_USERNAME: postgres
-        DB_PASSWORD: password
 
     # 1. TEST DE ARQUITECTURA (Rápido y prioritario)
     - name: Run Architecture Tests
@@ -77,10 +81,3 @@ jobs:
       run: |
         php artisan migrate --force
         ./vendor/bin/pest --exclude-group=architecture
-      env: # <--- ES VITAL REPETIRLO AQUÍ O PONERLO ARRIBA DEL TODO
-        DB_CONNECTION: pgsql
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
-        DB_DATABASE: testing
-        DB_USERNAME: postgres
-        DB_PASSWORD: password
