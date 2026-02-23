@@ -8,7 +8,9 @@ use App\Docs\Endpoints\Api\TenantEndpoints;
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreRequest;
+use App\Http\Requests\Tenant\TenantAdminStoreRequest;
 use App\Http\Requests\Tenant\UpdateRequest;
+use Application\Tenant\DTOs\CreateAdminRequest;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 
@@ -58,10 +60,45 @@ class TenantController extends Controller implements TenantEndpoints
         return $this->success($tenant, 'Tenant updated');
     }
 
+    public function deactivate(string $id): JsonResponse
+    {
+        $this->tenants->deactivate($id);
+
+        return $this->success(null, 'Tenant deactivated');
+    }
+
+    public function activate(string $id): JsonResponse
+    {
+        $this->tenants->activate($id);
+
+        return $this->success(null, 'Tenant activated');
+    }
+
     public function destroy(string $id): JsonResponse
     {
         $this->tenants->delete($id);
 
         return $this->success(null, 'Tenant deleted');
+    }
+
+    public function createTenantAdmin(TenantAdminStoreRequest $request, $tenantId): JsonResponse
+    {
+        $data = $request->validated();
+
+        $tenant = $this->tenants->findById($tenantId);
+
+        if (! $tenant) {
+            return $this->error('Not found', 404);
+        }
+
+        $this->tenants->createAdminUser(new CreateAdminRequest(
+            email: $data['email'],
+            password: $data['password'],
+            username: $data['username'],
+            firstName: $data['first_name'],
+            lastName: $data['last_name'],
+        ), $tenantId);
+
+        return $this->success(null, 'Tenant admin created');
     }
 }

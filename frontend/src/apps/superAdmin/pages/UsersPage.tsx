@@ -3,8 +3,8 @@ import { DeleteUserDialog } from '@/components/ui/8bit/blocks/users/DeleteUserDi
 import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
 import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
 import { Button } from '@/components/ui/8bit/button';
-import { rootUsersApi } from '@/lib/api';
-import { RootUser as User } from '@/types/rootUser';
+import { usersApi } from '@/lib/api';
+import { User } from '@/types/user';
 import { useEffect, useState } from "react";
 
 
@@ -19,7 +19,7 @@ export default function UsersPage() {
 
 
     const load = () => {
-        rootUsersApi.list()
+        usersApi.list()
             .then((response: any) => {
                 console.log("LOAD_USERS_RESPONSE:", response);
                 const usersArray = response.data?.items || [];
@@ -52,7 +52,7 @@ export default function UsersPage() {
         const tempPassword = "RoomDash_Safe_2026_!@#!"; 
         try {
             if (editing) {
-                await rootUsersApi.update(editing.id, { 
+                await usersApi.update(editing.id, { 
                     first_name: firstName,
                     last_name: lastName, 
                     username, 
@@ -61,7 +61,7 @@ export default function UsersPage() {
                     password_confirmation: tempPassword
                 });
             } else {
-                await rootUsersApi.create({ 
+                await usersApi.create({ 
                     first_name: firstName,
                     last_name: lastName, 
                     username, 
@@ -79,7 +79,7 @@ export default function UsersPage() {
 
     const handleConfirmDelete = async () => {
         if (deleting) {
-            await rootUsersApi.delete(deleting.id);
+            await usersApi.delete(deleting.id);
         }
         setDeleteOpen(false);
         load();

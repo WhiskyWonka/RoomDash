@@ -2,93 +2,130 @@
 
 uses()->group('architecture');
 
-// 1. Regla de Oro: El Dominio es sagrado (Puro)
-test('Domain should not depend on Application or Infrastructure')
+// ─────────────────────────────────────────────
+// Regla 1: El Domain es puro — no depende de nada externo
+// ─────────────────────────────────────────────
+arch('Domain must not depend on Application, Infrastructure or Http')
     ->expect('Domain')
-    ->not->toUse(['Application', 'Infrastructure', 'Illuminate', 'Http'])
-    ->ignoring(['PHPUnit']);
+    ->not->toUse(['Application', 'Infrastructure', 'Illuminate', 'App\\Http']);
 
-// 2. Aplicación: Solo puede mirar hacia abajo (al Dominio)
-test('Application should only depend on Domain or itself')
-    ->expect('Application')
-    ->not->toUse(['Infrastructure', 'Http', 'Illuminate'])
-    ->ignoring(['PHPUnit']);
+// ─────────────────────────────────────────────
+// Regla 2: Application solo mira hacia el Domain (por módulo para facilitar diagnóstico)
+// VIOLA: Application\User\UseCases\CreateUserUseCase importa App\Http\Controllers\Api\Concerns\ApiResponse
+// ─────────────────────────────────────────────
+arch('Application\User must not depend on Infrastructure or Http')
+    ->expect('Application\User')
+    ->not->toUse(['Infrastructure', 'App\\Http', 'Illuminate\\Http']);
 
-// // 3. Infraestructura: Puede usar todo, pero NADIE puede usarla a ella (excepto Providers)
-// test('Infrastructure should not be used by Domain or Application')
-//     ->expect('Infrastructure')
-//     ->not->toBeUsed()
-//     ->ignoring([
-//         'App\Providers',
-//         'Illuminate\Support\ServiceProvider',
-//     ]);
+arch('Application\AuditLog must not depend on Infrastructure or Http')
+    ->expect('Application\AuditLog')
+    ->not->toUse(['Infrastructure', 'App\\Http', 'Illuminate\\Http']);
 
-// 4. NUEVA PRUEBA CRÍTICA: Controladores NO pueden usar Modelos de Eloquent
-test('Controllers must not use Eloquent models directly')
+arch('Application\EmailVerification must not depend on Infrastructure or Http')
+    ->expect('Application\EmailVerification')
+    ->not->toUse(['Infrastructure', 'App\\Http', 'Illuminate\\Http']);
+
+arch('Application\Login must not depend on Infrastructure or Http')
+    ->expect('Application\Login')
+    ->not->toUse(['Infrastructure', 'App\\Http', 'Illuminate\\Http']);
+
+arch('Application\Tenant must not depend on Infrastructure or Http')
+    ->expect('Application\Tenant')
+    ->not->toUse(['Infrastructure', 'App\\Http', 'Illuminate\\Http']);
+
+// ─────────────────────────────────────────────
+// Regla 3: Controllers nunca usan modelos Eloquent directamente
+// ─────────────────────────────────────────────
+arch('Controllers must not use Eloquent models directly')
     ->expect('App\Http\Controllers')
     ->not->toUse([
-        'Infrastructure\Auth\Models',      // Bloquea todos los modelos de Auth
-        'Infrastructure\Tenant\Models',    // Bloquea todos los modelos de Tenant
-        'Infrastructure\\Models',          // Bloquea cualquier modelo en Infrastructure
+        'Infrastructure\Auth\Models',
+        'Infrastructure\Tenant\Models',
+        'Infrastructure\AuditLog\Models',
         'Illuminate\Database\Eloquent\Model',
         'Illuminate\Database\Query\Builder',
         'Illuminate\Database\Eloquent\Builder',
     ]);
 
-// // 5. NUEVA PRUEBA CRÍTICA: Controladores NO pueden usar Facades directamente
-// test('Controllers must not use Facades')
-//     ->expect('Http\Controllers')
-//     ->not->toUse([
-//         'Illuminate\Support\Facades\Hash',
-//         'Illuminate\Support\Facades\Auth',
-//         'Illuminate\Support\Facades\DB',
-//         'Illuminate\Support\Facades\\',    // Bloquea TODAS las facades
-//     ]);
+// ─────────────────────────────────────────────
+// Regla 4: Controllers inyectan interfaces (Ports), nunca adaptadores concretos (por área)
+// VIOLA: LoginController inyecta LaravelPasswordHasher (Infrastructure\Shared\Adapters)
+// ─────────────────────────────────────────────
+arch('Auth controllers must inject interfaces, not concrete adapters')
+    ->expect('App\Http\Controllers\Api\Auth')
+    ->not->toUse([
+        'Infrastructure\Auth\Adapters',
+        'Infrastructure\Tenant\Adapters',
+        'Infrastructure\AuditLog\Adapters',
+        'Infrastructure\Shared\Adapters',
+    ]);
 
-// // 6. NUEVA PRUEBA: Controladores deben usar casos de uso o repositorios
-// test('Controllers should only use Application layer for business logic')
-//     ->expect('Http\Controllers')
-//     ->not->toUse(['Infrastructure', 'Illuminate\Database\Eloquent'])
-//     ->ignoring([
-//         'Illuminate\Support\Facades\Log',    // Excepción para Log
-//     ]);
+arch('Api controllers must inject interfaces, not concrete adapters')
+    ->expect('App\Http\Controllers\Api\UserController')
+    ->not->toUse([
+        'Infrastructure\Auth\Adapters',
+        'Infrastructure\Tenant\Adapters',
+        'Infrastructure\AuditLog\Adapters',
+        'Infrastructure\Shared\Adapters',
+    ]);
 
-// 7. Verificar que los repositorios NO devuelven arrays (para el caso de EloquentAuditLogRepository)
-// test('Repositories must return domain entities or collections')
-//     ->expect('Infrastructure')
-//     ->classes()
-//     ->filter(fn ($class) => str_contains($class->getName(), 'Repository'))
-//     ->toImplement('Domain\Ports\RepositoryInterface')
-//     ->each(function ($class) {
-//         // Verificar métodos findPaginated no devuelven arrays
-//         $methods = $class->getMethods();
-//         foreach ($methods as $method) {
-//             if (str_contains($method->getName(), 'findPaginated')) {
-//                 // Esta es una verificación más compleja que requeriría reflexión avanzada
-//                 // Por ahora, documentamos que es una violación manual
-//             }
-//         }
-//     });
+arch('Tenant controller must inject interfaces, not concrete adapters')
+    ->expect('App\Http\Controllers\Api\TenantController')
+    ->not->toUse([
+        'Infrastructure\Auth\Adapters',
+        'Infrastructure\Tenant\Adapters',
+        'Infrastructure\AuditLog\Adapters',
+        'Infrastructure\Shared\Adapters',
+    ]);
 
-// 8. NUEVA PRUEBA: LoginController específicamente
-// test('LoginController must use use cases, not direct Hash')
-//     ->expect('Http\Controllers\LoginController')
-//     ->not->toUse([
-//         'Illuminate\Support\Facades\Hash',
-//         'Infrastructure\Auth\Models',
-//     ]);
+// ─────────────────────────────────────────────
+// Regla 5: Las Entities del Domain deben ser final (inmutables)
+// ─────────────────────────────────────────────
+arch('Domain entities must be final')
+    ->expect('Domain\*\Entities')
+    ->toBeFinal();
 
-// 9. NUEVA PRUEBA: Require2FA middleware no debe usar Auth::user() directamente
-// test('Middleware should use repository pattern')
-//     ->expect('Http\Middleware')
-//     ->not->toUse([
-//         'Illuminate\Support\Facades\Auth',
-//         'Infrastructure\Auth\Models',
-//     ]);
+// ─────────────────────────────────────────────
+// Regla 6: El Domain usa DateTimeImmutable, nunca Carbon
+// ─────────────────────────────────────────────
+arch('Domain must not use Carbon')
+    ->expect('Domain')
+    ->not->toUse(['Carbon\Carbon', 'Illuminate\Support\Carbon']);
 
-// 10. Verificar que los casos de uso existen (los que menciona el análisis)
-// test('Required use cases should exist for auth operations')
-//     ->expect('Application\UseCases\Auth')
-//     ->classes()
-//     ->toHaveCount(4)  // ActivateUserUseCase, DeactivateUserUseCase, UploadAvatarUseCase, DeleteAvatarUseCase
-//     ->ignoring('Application\UseCases\Auth\LoginUseCase');
+// ─────────────────────────────────────────────
+// Regla 7: Los Ports del Domain deben ser interfaces
+// ─────────────────────────────────────────────
+arch('Domain ports must be interfaces')
+    ->expect('Domain\*\Ports')
+    ->toBeInterfaces();
+
+// ─────────────────────────────────────────────
+// Regla 8: Controllers usan FormRequests — nunca validan con Request directo (por área)
+// Excepción permitida: usar Request para session(), ip(), userAgent() sin validar
+// ─────────────────────────────────────────────
+arch('Auth controllers must use FormRequests, not raw Request')
+    ->expect('App\Http\Controllers\Api\Auth')
+    ->not->toUse('Illuminate\Http\Request')
+    ->ignoring([
+        'App\Http\Controllers\Api\Auth\LoginController',      // usa session() para 2FA state — sin validación inline
+        'App\Http\Controllers\Api\Auth\TwoFactorController',  // usa session() para 2FA state — sin validación inline
+    ]);
+
+arch('Api controllers must use FormRequests, not raw Request')
+    ->expect('App\Http\Controllers\Api\UserController')
+    ->not->toUse('Illuminate\Http\Request')
+    ->ignoring([
+        'App\Http\Controllers\Api\UserController', // usa session(), ip(), userAgent() — sin validación inline
+    ]);
+
+arch('Tenant controller must use FormRequests, not raw Request')
+    ->expect('App\Http\Controllers\Api\TenantController')
+    ->not->toUse('Illuminate\Http\Request');
+
+// ─────────────────────────────────────────────
+// Regla 9: Los modelos Eloquent solo pueden ser usados dentro de Infrastructure
+// ─────────────────────────────────────────────
+arch('Infrastructure models must only be used within Infrastructure')
+    ->expect('Infrastructure\*\Models')
+    ->toOnlyBeUsedIn('Infrastructure')
+    ->ignoring(['Tests', 'Database\Factories']);

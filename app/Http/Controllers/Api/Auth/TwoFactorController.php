@@ -8,8 +8,8 @@ use App\Docs\Endpoints\Api\Auth\TwoFAEndpoints;
 use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\TwoFAConfirmRequest;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +18,7 @@ class TwoFactorController extends Controller implements TwoFAEndpoints
     use ApiResponse;
 
     public function __construct(
-        private readonly RootUserRepositoryInterface $users,
+        private readonly UserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
     ) {}
 
