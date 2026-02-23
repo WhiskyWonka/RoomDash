@@ -20,7 +20,7 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: TenantDialogPr
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
-                        {tenant ? `[EDIT_TENANT: ${tenant.id}]` : "[CREATE_NEW_TENANT]"}
+                        {tenant ? `[EDIT_TENANT: ${tenant.name}]` : "[CREATE_NEW_TENANT]"}
                     </DialogTitle>
                 </DialogHeader>
 
