@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Application\User\UseCases;
 
-use App\Http\Controllers\Api\Concerns\ApiResponse;
 use Application\User\DTOs\CreateUserRequest;
 // use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 use Domain\Auth\Entities\User;
@@ -18,8 +17,6 @@ use Domain\Shared\Ports\UuidGeneratorInterface;
 
 class CreateUserUseCase
 {
-    use ApiResponse;
-
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly EmailVerificationServiceInterface $emailService,

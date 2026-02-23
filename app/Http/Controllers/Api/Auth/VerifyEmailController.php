@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use Application\EmailVerification\DTOs\VerifyEmailRequest;
+use App\Http\Requests\Auth\VerifyEmailRequest;
+use Application\EmailVerification\DTOs\VerifyEmailDTO;
 use Application\EmailVerification\UseCases\VerifyEmailUseCase;
 use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class VerifyEmailController extends Controller
 {
@@ -18,16 +18,13 @@ class VerifyEmailController extends Controller
         private readonly VerifyEmailUseCase $verifyEmailUseCase,
     ) {}
 
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(VerifyEmailRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'token' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required|string',
-        ]);
+
+        $data = $request->validated();
 
         try {
-            $this->verifyEmailUseCase->execute(new VerifyEmailRequest(
+            $this->verifyEmailUseCase->execute(new VerifyEmailDTO(
                 token: $data['token'],
                 password: $data['password'],
                 passwordConfirmation: $data['password_confirmation'],

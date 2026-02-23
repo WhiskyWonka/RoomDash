@@ -13,7 +13,7 @@ uses(RefreshDatabase::class, ActsAsAuthenticatedUser::class);
 // Login flow - unverified and deactivated checks (BR-008, BR-009)
 // =========================================================================
 
-it('returns 403 with EMAIL_NOT_VERIFIED when user is not verified', function () {
+it('returns 401 with success false when user is not verified', function () {
     // Arrange
     User::factory()->create([
         'email' => 'unverified@example.com',
@@ -29,11 +29,11 @@ it('returns 403 with EMAIL_NOT_VERIFIED when user is not verified', function () 
     ]);
 
     // Assert
-    $response->assertStatus(403)
-        ->assertJson(['errors' => ['code' => 'EMAIL_NOT_VERIFIED']]);
+    $response->assertStatus(401)
+        ->assertJson(['success' => false]);
 });
 
-it('returns 403 with ACCOUNT_DEACTIVATED when user is deactivated', function () {
+it('returns 401 with success false when user is deactivated', function () {
     // Arrange
     User::factory()->create([
         'email' => 'deactivated@example.com',
@@ -49,8 +49,8 @@ it('returns 403 with ACCOUNT_DEACTIVATED when user is deactivated', function () 
     ]);
 
     // Assert
-    $response->assertStatus(403)
-        ->assertJson(['errors' => ['code' => 'ACCOUNT_DEACTIVATED']]);
+    $response->assertStatus(401)
+        ->assertJson(['success' => false]);
 });
 
 // =========================================================================

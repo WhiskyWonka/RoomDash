@@ -38,6 +38,8 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
         // Protected routes (requires 2FA verification)
         Route::middleware(['web', 'require.2fa'])->group(function () {
             Route::apiResource('tenants', TenantController::class);
+            Route::patch('/tenants/{id}/activate', [TenantController::class, 'activate']);
+            Route::patch('/tenants/{id}/deactivate', [TenantController::class, 'deactivate']);
 
             // User CRUD
             Route::get('/users', [UserController::class, 'index']);
@@ -61,6 +63,8 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             // Audit Logs (read-only)
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
             Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
+
+            Route::post('/tenants/{tenantId}/create-admin', [TenantController::class, 'createTenantAdmin'])->middleware('audit.log:user,users');
 
             // Audit logs are immutable - return 405 for modification attempts
             Route::match(['put', 'patch', 'delete'], '/audit-logs/{id}', function () {

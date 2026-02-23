@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Application\EmailVerification\DTOs;
 
-final class VerifyEmailRequest
+final class VerifyEmailDTO
 {
     public function __construct(
         public readonly string $token,

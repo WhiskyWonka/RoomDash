@@ -10,18 +10,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\Verify2FARequest;
 use App\Http\Requests\Auth\VerifyRecovery2FARequest;
-use Application\Login\DTOs\CreateLoginReesponse;
+use Application\Login\DTOs\UserLoginDTO;
+use Application\Login\UseCases\LoginUseCase as UseCasesLoginUseCase;
 use DateTimeImmutable;
 use Domain\AuditLog\Entities\AuditLog;
 use Domain\AuditLog\Ports\AuditLogRepositoryInterface;
 use Domain\Auth\Ports\TwoFactorServiceInterface;
 use Domain\Auth\Ports\UserRepositoryInterface;
+use Domain\Shared\Ports\PasswordHasherInterface;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Infrastructure\Auth\Adapters\EloquentUserRepository;
-use Infrastructure\Shared\Adapters\LaravelPasswordHasher;
 
 class LoginController extends Controller implements LoginEndpoints
 {
@@ -31,48 +32,51 @@ class LoginController extends Controller implements LoginEndpoints
         private readonly UserRepositoryInterface $users,
         private readonly TwoFactorServiceInterface $twoFactor,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
-        private readonly EloquentUserRepository $userRepository,
-        private readonly LaravelPasswordHasher $hasherService,
+        private readonly PasswordHasherInterface $hasherService,
+        private readonly UseCasesLoginUseCase $loginUseCase,
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
     {
-        // Check if user exists with this email before verifying password
-        // We need the Eloquent model to check is_active and email_verified_at
-        $rootUser = $this->userRepository->findByEmail($request['email']);
+        try {
+            $userDTO = new UserLoginDTO(
+                email: $request->input('email'),
+                password: $request->input('password'),
+            );
 
-        if (! $rootUser || ! $rootUser->password || ! $this->hasherService->check($request['password'], $rootUser->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            $user = $this->loginUseCase->execute($userDTO);
+
+            $request->session()->regenerate();
+            Auth::guard('admin')->loginUsingId($user->id);
+
+            $request->session()->put('2fa_verified', false);
+            $request->session()->put('admin_user_id', $user->id);
+            $request->session()->put('2fa_pending', true);
+
+            $notConfirmed = $user->twoFactorConfirmedAt ? false : true;
+
+            if ($notConfirmed) {
+                $data = [
+                    'user' => $user->jsonSerialize(),
+                    'twoFactorRequired' => true,
+                    'requiresSetup' => true,
+                ];
+
+                return $this->success($data, '2FA Setup Required');
+            }
+
+            $data = [
+                'user' => $user->jsonSerialize(),
+                'twoFactorRequired' => true,
+                'requiresSetup' => false,
+            ];
+
+            return $this->success($data, 'Login success', 200);
+
+        } catch (DomainException $e) {
+            return $this->error($e->getMessage(), $e->getCode());
         }
 
-        // Check if email is verified (BR-009)
-        if ($rootUser->emailVerifiedAt === null) {
-            return $this->error('Email not verified', 403, ['code' => 'EMAIL_NOT_VERIFIED']);
-        }
-
-        // Check if account is active (BR-008)
-        if (! $rootUser->isActive) {
-            return $this->error('Account deactivated', 403, ['code' => 'ACCOUNT_DEACTIVATED']);
-        }
-
-        $request->session()->regenerate();
-        Auth::guard('admin')->loginUsingId($rootUser->id);
-
-        $request->session()->put('2fa_verified', false);
-        $request->session()->put('admin_user_id', $rootUser->id);
-        $request->session()->put('2fa_pending', true);
-
-        $notConfirmed = $rootUser->twoFactorConfirmedAt ? false : true;
-
-        if ($notConfirmed) {
-            $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, true);
-
-            return $this->success($data, '2FA Setup Required');
-        }
-
-        $data = new CreateLoginReesponse($rootUser->jsonSerialize(), true, false);
-
-        return $this->success($data, 'Login success', 200);
     }
 
     public function verify2fa(Verify2FARequest $request): JsonResponse
@@ -156,7 +160,7 @@ class LoginController extends Controller implements LoginEndpoints
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logged out']);
+        return $this->success([], 'Logged out', 200);
     }
 
     public function me(Request $request): JsonResponse
@@ -171,10 +175,12 @@ class LoginController extends Controller implements LoginEndpoints
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        return response()->json([
+        $data = [
             'user' => $user,
             'twoFactorVerified' => $request->session()->get('2fa_verified', false),
             'twoFactorPending' => $request->session()->get('2fa_pending', false),
-        ]);
+        ];
+
+        return $this->success($data, 'User retrieved successfully', 200);
     }
 }

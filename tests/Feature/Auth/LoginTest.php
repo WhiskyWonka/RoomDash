@@ -72,9 +72,11 @@ test('authenticated user can access me endpoint', function () {
 
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'user' => ['id', 'email', 'twoFactorEnabled'],
-            'twoFactorVerified',
-            'twoFactorPending',
+            'data' => [
+                'user' => ['id', 'email', 'twoFactorEnabled'],
+                'twoFactorVerified',
+                'twoFactorPending',
+            ],
         ]);
 });
 
