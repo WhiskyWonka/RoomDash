@@ -20,6 +20,8 @@ jobs:
       DB_PASSWORD: password
       # Usar una key fija evita fallos de sesión/auth en los tests de Feature
       APP_KEY: base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=
+      MAIL_MAILER: log
+      QUEUE_CONNECTION: sync
 
     services:
       # Postgres 18.1 según tu entorno
@@ -80,4 +82,4 @@ jobs:
     - name: Run All Tests
       run: |
         php artisan migrate --force
-        ./vendor/bin/pest --exclude-group=architecture
+        php artisan test --exclude-group=architecture --stop-on-failure --verbose
