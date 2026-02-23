@@ -1,5 +1,5 @@
 import type { Tenant, CreateTenantInput, UpdateTenantInput } from "@/types/tenant";
-import type { RootUser, CreateRootUserInput, UpdateRootUserInput } from "@/types/rootUser";
+import type { User, CreateUserInput, UpdateUserInput } from "@/types/user";
 import type { Feature, CreateFeatureInput, UpdateFeatureInput } from "@/types/feature";
 
 function getCsrfToken(): string | undefined {
@@ -88,17 +88,17 @@ function createResource<T, CreateInput = any, UpdateInput = any>(basePath: strin
 export const tenantsApi = createResource<Tenant, CreateTenantInput, UpdateTenantInput>("/api/tenants");
 export const featuresApi = createResource<Feature, CreateFeatureInput, UpdateFeatureInput>("/api/features");
 
-const baseRootUsers = createResource<RootUser, CreateRootUserInput, UpdateRootUserInput>("/api/root-users");
+const baseUsers = createResource<User, CreateUserInput, UpdateUserInput>("/api/users");
 
-export const rootUsersApi = {
-    ...baseRootUsers, // Esto trae list, get, create, update, delete
+export const usersApi = {
+    ...baseUsers, // Esto trae list, get, create, update, delete
 
-    activate: (id: string | number) => 
-        request<RootUser>(`/api/root-users/${id}/activate`, { method: "PATCH" }),
-        
-    deactivate: (id: string | number) => 
-        request<RootUser>(`/api/root-users/${id}/deactivate`, { method: "PATCH" }),
-        
-    resendVerification: (id: string | number) => 
-        request<void>(`/api/root-users/${id}/resend-verification`, { method: "POST" }),
+    activate: (id: string | number) =>
+        request<User>(`/api/users/${id}/activate`, { method: "PATCH" }),
+
+    deactivate: (id: string | number) =>
+        request<User>(`/api/users/${id}/deactivate`, { method: "PATCH" }),
+
+    resendVerification: (id: string | number) =>
+        request<void>(`/api/users/${id}/resend-verification`, { method: "POST" }),
 };

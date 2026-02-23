@@ -52,6 +52,51 @@ The backend follows hexagonal architecture with PSR-4 namespaces mapped directly
 
 Bindings are registered in `TenancyServiceProvider`: `TenantRepositoryInterface` → `EloquentTenantRepository`, `SchemaManagerInterface` → `PostgresSchemaManager`.
 
+#### Request Flow
+
+```
+Request → FormRequest (validate) → DTO (transport) → Use Case → Entity → API Resource → Response
+```
+
+#### Layer Rules (enforced by tests/Architecture/ArchitectureTest.php)
+
+**Domain** (`app/Domain/`)
+- NEVER import `Illuminate\`, `Application\`, `Infrastructure\`, or `App\Http\`.
+- Entities must be `final` and use `DateTimeImmutable` — never Carbon.
+- Ports (`Domain\*\Ports\`) must be interfaces only — no implementation.
+- Exceptions extend PHP's `\DomainException` — one class per distinguishable business situation.
+- No DTOs — Domain never knows about them.
+
+**Application** (`app/Application/`)
+- NEVER import `Infrastructure\`, `App\Http\`, or `Illuminate\Http\`.
+- Only depends on `Domain\` and itself.
+- DTOs live here — transport data from Http into use cases.
+- Use cases return Domain Entities, never Eloquent models or DTOs.
+- Use cases throw Domain exceptions for business errors — never return error codes or booleans.
+- Use cases NEVER write to HTTP session — they return a result object; the controller handles session.
+
+**Infrastructure** (`app/Infrastructure/`)
+- Eloquent models live here and NEVER leave this layer (except Database\Factories).
+- Adapters implement Domain Ports via `toEntity()` to convert Eloquent → Domain Entity.
+
+**Http** (`app/Http/`)
+- Controllers inject Ports (interfaces), NEVER concrete adapters (`EloquentUserRepository`, `LaravelPasswordHasher`, etc.).
+- Validation ALWAYS goes in FormRequest classes — never `$request->validate([...])` inline.
+- Exception: `Illuminate\Http\Request` is allowed in controllers ONLY for reading session/ip/userAgent without validation — must be documented with a comment.
+- Response formatting goes in API Resources (`app/Http/Resources/`) — never inline arrays in controllers.
+- Controllers catch Domain exceptions and map them to HTTP status codes.
+- Session writes (`$request->session()->put(...)`) belong in controllers, not use cases.
+
+#### HTTP status codes for Domain exceptions
+
+| Situation | Code |
+|---|---|
+| Invalid input / business rule violation | 422 |
+| Invalid or expired token | 401 |
+| Action forbidden on self or role | 403 |
+| Conflict with current system state | 409 |
+| Resource not found | 404 |
+
 ### Multi-Tenancy (stancl/tenancy)
 
 - **Strategy:** PostgreSQL schema-per-tenant (not separate databases). Schemas named `tenant{uuid}`.

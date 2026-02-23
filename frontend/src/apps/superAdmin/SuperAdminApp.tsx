@@ -7,7 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/authApi";
-import VerifyRootUserPage from './pages/VerifyRootUserPage';
+import VerifyUserPage from './pages/VerifyUserPage';
 
 function SuperAdminApp() {
     const [loading, setLoading] = useState(true);
@@ -84,7 +84,7 @@ function SuperAdminApp() {
                         : <LoginPage onLoginSuccess={checkAuth} /> 
                 }
             />
-            <Route path="verify-email" element={<VerifyRootUserPage />} />
+            <Route path="verify-email" element={<VerifyUserPage />} />
 
             <Route 
                 path="/" 

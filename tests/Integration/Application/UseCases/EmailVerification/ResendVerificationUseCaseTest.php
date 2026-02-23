@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Application\EmailVerification\DTOs\ResendVerificationRequest;
 use Application\EmailVerification\UseCases\ResendVerificationUseCase;
-use Domain\Auth\Entities\RootUser;
+use Domain\Auth\Entities\User;
 use Domain\Auth\Exceptions\AlreadyVerifiedException;
 use Domain\Auth\Ports\EmailVerificationServiceInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 
 it('invalidates previous tokens and sends new email', function () {
     // Arrange
-    $unverifiedUser = new RootUser(
+    $unverifiedUser = new User(
         id: 'user-uuid',
         username: new \Domain\Auth\ValueObjects\Username('jdoe'),
         firstName: 'John',
@@ -26,7 +26,7 @@ it('invalidates previous tokens and sends new email', function () {
         createdAt: new DateTimeImmutable,
     );
 
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $emailService = Mockery::mock(EmailVerificationServiceInterface::class);
 
     $userRepository->shouldReceive('findById')->with('user-uuid')->andReturn($unverifiedUser);
@@ -46,7 +46,7 @@ it('invalidates previous tokens and sends new email', function () {
 
 it('throws exception when user already verified', function () {
     // Arrange
-    $verifiedUser = new RootUser(
+    $verifiedUser = new User(
         id: 'user-uuid',
         username: new \Domain\Auth\ValueObjects\Username('jdoe'),
         firstName: 'John',
@@ -61,7 +61,7 @@ it('throws exception when user already verified', function () {
         createdAt: new DateTimeImmutable,
     );
 
-    $userRepository = Mockery::mock(RootUserRepositoryInterface::class);
+    $userRepository = Mockery::mock(UserRepositoryInterface::class);
     $emailService = Mockery::mock(EmailVerificationServiceInterface::class);
 
     $userRepository->shouldReceive('findById')->with('user-uuid')->andReturn($verifiedUser);

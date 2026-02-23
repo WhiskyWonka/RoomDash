@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Application\EmailVerification\UseCases;
 
-use Application\EmailVerification\DTOs\VerifyEmailRequest;
+use Application\EmailVerification\DTOs\VerifyEmailDTO;
 use Domain\Auth\Exceptions\ExpiredTokenException;
 use Domain\Auth\Exceptions\InvalidTokenException;
 use Domain\Auth\Ports\EmailVerificationTokenRepositoryInterface;
-use Domain\Auth\Ports\RootUserRepositoryInterface;
+use Domain\Auth\Ports\UserRepositoryInterface;
 use Domain\Shared\Ports\PasswordHasherInterface;
 
 class VerifyEmailUseCase
 {
     public function __construct(
         private readonly EmailVerificationTokenRepositoryInterface $tokenRepository,
-        private readonly RootUserRepositoryInterface $userRepository,
+        private readonly UserRepositoryInterface $userRepository,
         private readonly PasswordHasherInterface $passwordHasher,
     ) {}
 
@@ -23,7 +23,7 @@ class VerifyEmailUseCase
      * @throws InvalidTokenException
      * @throws ExpiredTokenException
      */
-    public function execute(VerifyEmailRequest $request): void
+    public function execute(VerifyEmailDTO $request): void
     {
         $hashedToken = hash('sha256', $request->token);
 
