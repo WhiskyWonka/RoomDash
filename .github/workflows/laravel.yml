@@ -75,8 +75,9 @@ jobs:
     # 2. TEST DE LÓGICA (Feature, Unit, Integration)
     - name: Run All Tests
       run: |
-        php artisan migrate --force
-        ./vendor/bin/pest --exclude-group=architecture
+        php artisan config:clear
+        php artisan migrate --force --env=testing
+        php artisan test --exclude-group=architecture
       env:
         DB_CONNECTION: pgsql
         DB_HOST: 127.0.0.1
@@ -84,3 +85,4 @@ jobs:
         DB_DATABASE: testing
         DB_USERNAME: postgres
         DB_PASSWORD: password
+        APP_KEY: ${{ secrets.APP_KEY || 'base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=' }} 
