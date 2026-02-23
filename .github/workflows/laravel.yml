@@ -16,11 +16,12 @@ jobs:
         image: postgres:18
         env:
           POSTGRES_DB: testing
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -73,8 +74,9 @@ jobs:
 
     # 2. TEST DE LÓGICA (Feature, Unit, Integration)
     - name: Run All Tests
-      php artisan migrate --force --env=testing
-      run: ./vendor/bin/pest --exclude-group=architecture
+      run: |
+        php artisan migrate --force
+        ./vendor/bin/pest --exclude-group=architecture
       env:
         DB_CONNECTION: pgsql
         DB_HOST: 127.0.0.1
