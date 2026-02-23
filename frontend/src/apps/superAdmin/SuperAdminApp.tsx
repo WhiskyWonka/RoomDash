@@ -5,64 +5,25 @@ import DashboardPage from './pages/DashboardPage'
 import UsersPage from './pages/UsersPage'
 import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
-import { useEffect, useState } from "react";
-import { authApi } from "@/lib/authApi";
+import { useEffect } from "react";
 import VerifyRootUserPage from './pages/VerifyRootUserPage';
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
+
 
 function SuperAdminApp() {
-    const [loading, setLoading] = useState(true);
-    const [authState, setAuthState] = useState<{
-        user: any;
-        twoFactorPending: boolean;
-    }>({ user: null, twoFactorPending: false });
-
-    const [user, setUser] = useState<any>(null);
+    const { isAuthenticated, loading, checkAuth } = useAuth();
     const location = useLocation();
 
-    // 1. Definimos la función de chequeo
-    const checkAuth = async () => {
-        try {
-            console.log("FETCHING_USER_DATA...");
-            const data = await authApi.me();
-            console.log("SUCCESS_USER:", data);
+    // Determinamos si es una ruta que no requiere validación bloqueante
+    const isPublicRoute = location.pathname.includes('/login') || location.pathname.includes('/verify-email');
 
-            setAuthState({
-                user: data.user,
-                twoFactorPending: data.twoFactorPending || false
-            });
-            //setUser(data.user);
-        } catch (error: any) {
-            console.log("DEBUG_AUTH_ERROR:", error.message);
-            setAuthState({ user: null, twoFactorPending: false });
-            //setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 2. Único useEffect para el montaje inicial
     useEffect(() => {
-        // Si ya estamos en login, no bloqueamos la UI preguntando al server
-        if (location.pathname.includes('/login')) {
-            setLoading(false);
-            return;
-        }
+        // Validamos siempre, pero el Contexto ya sabe si mostrar loading o no
         checkAuth();
-    }, []);
+    }, [location.pathname, checkAuth]);
 
-    // 3. Segundo useEffect para cambios de ruta (OPCIONAL)
-    // Pero OJO: Todos los Hooks van ANTES de cualquier return
-    useEffect(() => {
-        if ((user && location.pathname.includes('/login')) || location.pathname.includes('/verify-email')) {
-            // Si ya hay usuario y estamos en login, no hace falta re-chequear,
-            // O si va a validar el token email
-            // la lógica de abajo nos redireccionará.
-            return;
-        }
-    }, [location.pathname]);
-
-    // 4. AHORA SÍ: Los returns de renderizado van al final
-    if (loading) {
+    if (loading && !isPublicRoute) {
         return (
             <div className="min-h-screen bg-black text-[#00ff00] flex items-center justify-center font-mono">
                 [SYSTEM_CHECKING_CREDENTIALS...]
@@ -70,12 +31,10 @@ function SuperAdminApp() {
         );
     }
 
-    const isAuthenticated = !!authState.user && !authState.twoFactorPending;
-    //const isAuthenticated = !!user;
+    if (loading) return null; // O un spinner global
 
     return (
         <Routes>
-            {/* Si ya estoy autenticado, el login me manda al dashboard */}
             <Route 
                 path="login" 
                 element={
@@ -88,7 +47,11 @@ function SuperAdminApp() {
 
             <Route 
                 path="/" 
-                element={isAuthenticated ? <SuperAdminLayout /> : <Navigate to="login" replace />}
+                element={
+                    <ProtectedRoute>
+                        <SuperAdminLayout />
+                    </ProtectedRoute>
+                }
             >
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
@@ -100,4 +63,4 @@ function SuperAdminApp() {
     );
 }
 
-export default SuperAdminApp
+export default SuperAdminApp;
