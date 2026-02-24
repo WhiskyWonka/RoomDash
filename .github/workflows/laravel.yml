@@ -83,4 +83,4 @@ jobs:
     - name: Run All Tests
       run: |
         php artisan migrate --force
-        ./vendor/bin/pest --exclude-group=architecture --stop-on-failure --verbose
+        ./vendor/bin/pest --exclude-group=architecture --stop-on-failure --debug
