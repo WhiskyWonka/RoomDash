@@ -21,6 +21,7 @@ jobs:
       DB_USERNAME: postgres
       DB_PASSWORD: password
       TENANCY_CREATE_DATABASE_IN_TESTS: false
+      TENANCY_DATABASE_CONNECTION: pgsql
       # Usar una key fija evita fallos de sesión/auth en los tests de Feature
       APP_KEY: base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=
       MAIL_MAILER: log
