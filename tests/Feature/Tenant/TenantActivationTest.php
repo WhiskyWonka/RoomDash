@@ -13,14 +13,14 @@ uses(RefreshDatabase::class, ActsAsAuthenticatedUser::class);
 // =========================================================================
 
 it('returns 401 when unauthenticated trying to activate a tenant', function () {
-    $tenant = Tenant::factory()->inactive()->create();
+    $tenant = Tenant::factory()->inactive()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/activate")
         ->assertStatus(401);
 });
 
 it('returns 401 when unauthenticated trying to deactivate a tenant', function () {
-    $tenant = Tenant::factory()->create();
+    $tenant = Tenant::factory()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/deactivate")
         ->assertStatus(401);
@@ -28,7 +28,7 @@ it('returns 401 when unauthenticated trying to deactivate a tenant', function ()
 
 it('returns 403 with 2FA_REQUIRED when 2fa not verified on activate', function () {
     $this->actingAsUserPending2FA();
-    $tenant = Tenant::factory()->inactive()->create();
+    $tenant = Tenant::factory()->inactive()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/activate")
         ->assertStatus(403)
@@ -37,7 +37,7 @@ it('returns 403 with 2FA_REQUIRED when 2fa not verified on activate', function (
 
 it('returns 403 with 2FA_REQUIRED when 2fa not verified on deactivate', function () {
     $this->actingAsUserPending2FA();
-    $tenant = Tenant::factory()->create();
+    $tenant = Tenant::factory()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/deactivate")
         ->assertStatus(403)
@@ -50,7 +50,7 @@ it('returns 403 with 2FA_REQUIRED when 2fa not verified on deactivate', function
 
 it('returns 200 when activating an inactive tenant', function () {
     $this->actingAsVerifiedUser();
-    $tenant = Tenant::factory()->inactive()->create();
+    $tenant = Tenant::factory()->inactive()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/activate")
         ->assertStatus(200)
@@ -59,7 +59,7 @@ it('returns 200 when activating an inactive tenant', function () {
 
 it('sets is_active to true when activating a tenant', function () {
     $this->actingAsVerifiedUser();
-    $tenant = Tenant::factory()->inactive()->create();
+    $tenant = Tenant::factory()->inactive()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/activate");
 
@@ -82,7 +82,7 @@ it('returns 404 when activating a non-existent tenant', function () {
 
 it('returns 200 when deactivating an active tenant', function () {
     $this->actingAsVerifiedUser();
-    $tenant = Tenant::factory()->create();
+    $tenant = Tenant::factory()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/deactivate")
         ->assertStatus(200)
@@ -91,7 +91,7 @@ it('returns 200 when deactivating an active tenant', function () {
 
 it('sets is_active to false when deactivating a tenant', function () {
     $this->actingAsVerifiedUser();
-    $tenant = Tenant::factory()->create();
+    $tenant = Tenant::factory()->createQuietly();
 
     $this->patchJson("/api/tenants/{$tenant->id}/deactivate");
 
