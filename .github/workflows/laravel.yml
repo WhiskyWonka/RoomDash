@@ -18,6 +18,7 @@ jobs:
       DB_DATABASE: testing
       DB_USERNAME: postgres
       DB_PASSWORD: password
+      TENANCY_CREATE_DATABASE_IN_TESTS: false
       # Usar una key fija evita fallos de sesión/auth en los tests de Feature
       APP_KEY: base64:t3V6o7x9P1+uY7zR8m5L2k4j6H9N0Q1W2E3R4T5Y6U7=
       MAIL_MAILER: log
@@ -71,8 +72,6 @@ jobs:
     - name: Prepare Laravel Environment
       run: |
         cp .env.example .env
-        # Ajustamos el .env para usar Postgres en el CI
-        php artisan key:generate
 
     # 1. TEST DE ARQUITECTURA (Rápido y prioritario)
     - name: Run Architecture Tests
