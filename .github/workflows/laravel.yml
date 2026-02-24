@@ -10,6 +10,8 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 10
+
     # Declarar env aquí arriba hace que TODOS los steps las usen, incluyendo el setup de PHP y la instalación de dependencias
     env:
       DB_CONNECTION: pgsql
