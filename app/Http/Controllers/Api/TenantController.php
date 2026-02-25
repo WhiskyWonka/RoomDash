@@ -15,6 +15,7 @@ use Application\Tenant\DTOs\CreateAdminDTO;
 use Application\Tenant\DTOs\UpdateAdminDTO;
 use Application\Tenant\UseCases\CreateAdminUseCase;
 use Application\Tenant\UseCases\DeleteAdminUseCase;
+use Application\Tenant\UseCases\ResendAdminVerificationUseCase;
 use Application\Tenant\UseCases\UpdateAdminUseCase;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,8 @@ class TenantController extends Controller implements TenantEndpoints
         private readonly TenantRepositoryInterface $tenants,
         private readonly CreateAdminUseCase $createAdminUseCase,
         private readonly UpdateAdminUseCase $updateAdminUseCase,
-        private readonly DeleteAdminUseCase $deleteAdminUseCase
+        private readonly DeleteAdminUseCase $deleteAdminUseCase,
+        private readonly ResendAdminVerificationUseCase $resendAdminVerificationUseCase,
     ) {}
 
     public function index(): JsonResponse
@@ -127,6 +129,17 @@ class TenantController extends Controller implements TenantEndpoints
         }
 
         return $this->success(null, 'Admin deleted');
+    }
+
+    public function resendAdminVerification(string $tenantId): JsonResponse
+    {
+        try {
+            $this->resendAdminVerificationUseCase->execute($tenantId);
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 404);
+        }
+
+        return $this->success(null, 'Verification email sent');
     }
 
     public function createTenantAdmin(TenantAdminStoreRequest $request, $tenantId): JsonResponse

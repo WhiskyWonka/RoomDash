@@ -136,6 +136,18 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         $tenant->run(fn () => User::findOrFail($userId)->delete());
     }
 
+    public function resendAdminVerification(string $tenantId): void
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        $tenant->run(function () {
+            $user = User::firstOrFail();
+
+            $this->emailVerification->invalidatePreviousTokens($user->id);
+            $this->emailVerification->sendVerificationEmail($user->id);
+        });
+    }
+
     private function toEntity(TenantModel $model): TenantEntity
     {
         return new TenantEntity(

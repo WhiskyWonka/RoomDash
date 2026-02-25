@@ -32,4 +32,6 @@ interface TenantRepositoryInterface
     public function updateAdminUser(string $tenantId, string $userId, array $data): User;
 
     public function deleteAdminUser(string $tenantId, string $userId): void;
+
+    public function resendAdminVerification(string $tenantId): void;
 }

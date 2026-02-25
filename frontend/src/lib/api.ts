@@ -113,6 +113,9 @@ export const tenantsApi = {
 
     deleteAdmin: (tenantId: string | number) =>
         request<void>(`/api/tenants/${tenantId}/admin`, { method: "DELETE" }),
+
+    resendAdminVerification: (tenantId: string | number) =>
+        request<void>(`/api/tenants/${tenantId}/admin/resend-verification`, { method: "POST" }),
 };
 export const featuresApi = createResource<Feature, CreateFeatureInput, UpdateFeatureInput>("/api/features");
 

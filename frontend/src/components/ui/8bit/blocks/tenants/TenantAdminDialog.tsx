@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/shadcn/field";
+import { Separator } from "@/components/ui/8bit/separator"
 
 const adminSchema = z.object({
   first_name: z.string().min(1, "Required").max(255),
@@ -29,9 +30,10 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: AdminFormValues) => Promise<void>;
   onDelete?: () => void;
+  onResendVerification?: () => void;
 }
 
-export function TenantAdminDialog({ open, tenant, adminUser, onClose, onSubmit, onDelete }: Props) {
+export function TenantAdminDialog({ open, tenant, adminUser, onClose, onSubmit, onDelete, onResendVerification }: Props) {
   const isEdit = Boolean(adminUser);
 
   const form = useForm<AdminFormValues>({
@@ -136,6 +138,14 @@ export function TenantAdminDialog({ open, tenant, adminUser, onClose, onSubmit, 
               <Button type="button" variant="warning" onClick={onDelete}>Delete</Button>
             )}
             <Button type="submit">{isEdit ? "Save" : "Create Admin"}</Button>
+          </DialogFooter>
+          <Separator />
+          <DialogFooter className="gap-4">
+            {isEdit && onResendVerification && (
+              <Button className="w-full" type="button" variant="secondary" onClick={onResendVerification}>
+                Resend Verification Email
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

@@ -68,6 +68,7 @@ foreach (config('tenancy.central_domains', ['localhost']) as $domain) {
             Route::get('/tenants/{tenantId}/admin', [TenantController::class, 'getAdmin']);
             Route::put('/tenants/{tenantId}/admin', [TenantController::class, 'updateTenantAdmin'])->middleware('audit.log:user,users');
             Route::delete('/tenants/{tenantId}/admin', [TenantController::class, 'deleteAdmin'])->middleware('audit.log:user,users');
+            Route::post('/tenants/{tenantId}/admin/resend-verification', [TenantController::class, 'resendAdminVerification'])->middleware('audit.log:user,users');
 
             // Audit logs are immutable - return 405 for modification attempts
             Route::match(['put', 'patch', 'delete'], '/audit-logs/{id}', function () {

@@ -91,6 +91,11 @@ export default function TenantsPage() {
         setAdminOpen(false);
     };
 
+    const handleResendAdminVerification = async () => {
+        if (!editing) { return; }
+        await tenantsApi.resendAdminVerification(editing.id);
+    };
+
     const handleDeleteAdmin = () => {
         setAdminOpen(false);
         setDeleteAdminOpen(true);
@@ -149,6 +154,7 @@ export default function TenantsPage() {
                 onClose={() => setAdminOpen(false)}
                 onSubmit={handleSubmitAdmin}
                 onDelete={currentAdmin ? handleDeleteAdmin : undefined}
+                onResendVerification={currentAdmin ? handleResendAdminVerification : undefined}
             />
             <DeleteTenantAdminDialog
                 open={deleteAdminOpen}
