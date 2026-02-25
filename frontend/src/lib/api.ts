@@ -1,4 +1,5 @@
-import type { Tenant, CreateTenantInput, UpdateTenantInput } from "@/types/tenant";
+import type { Tenant, CreateTenantInput, UpdateTenantInput, CreateTenantAdminInput, UpdateTenantAdminInput } from "@/types/tenant";
+import type { User } from "@/types/user";
 import type { User, CreateUserInput, UpdateUserInput } from "@/types/user";
 import type { Feature, CreateFeatureInput, UpdateFeatureInput } from "@/types/feature";
 
@@ -85,7 +86,35 @@ function createResource<T, CreateInput = any, UpdateInput = any>(basePath: strin
     };
 }
 
-export const tenantsApi = createResource<Tenant, CreateTenantInput, UpdateTenantInput>("/api/tenants");
+const baseTenants = createResource<Tenant, CreateTenantInput, UpdateTenantInput>("/api/tenants");
+
+export const tenantsApi = {
+    ...baseTenants,
+
+    activate: (id: string | number) =>
+        request<void>(`/api/tenants/${id}/activate`, { method: "PATCH" }),
+
+    deactivate: (id: string | number) =>
+        request<void>(`/api/tenants/${id}/deactivate`, { method: "PATCH" }),
+
+    createAdmin: (tenantId: string | number, data: CreateTenantAdminInput) =>
+        request<void>(`/api/tenants/${tenantId}/create-admin`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    getAdmin: (tenantId: string | number) =>
+        request<{ data: User }>(`/api/tenants/${tenantId}/admin`),
+
+    updateAdmin: (tenantId: string | number, data: UpdateTenantAdminInput) =>
+        request<void>(`/api/tenants/${tenantId}/admin`, {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
+
+    deleteAdmin: (tenantId: string | number) =>
+        request<void>(`/api/tenants/${tenantId}/admin`, { method: "DELETE" }),
+};
 export const featuresApi = createResource<Feature, CreateFeatureInput, UpdateFeatureInput>("/api/features");
 
 const baseUsers = createResource<User, CreateUserInput, UpdateUserInput>("/api/users");

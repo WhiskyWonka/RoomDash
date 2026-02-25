@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
+
 import { cn } from "@/lib/utils";
 
+import { Alert, AlertDescription } from "@/components/ui/8bit/alert";
 import { Button } from "@/components/ui/8bit/button";
 import {
     Card,
@@ -9,6 +12,7 @@ import {
     CardTitle,
 } from "@/components/ui/8bit/card";
 import { Input } from "@/components/ui/8bit/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/8bit/input-otp";
 import { Label } from "@/components/ui/8bit/label";
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
@@ -17,37 +21,42 @@ interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
     qrData?: { qrCode: string; secret: string } | null
     onVerify2FA: (code: string) => void;
     onCancel2FA: () => void;
+    error?: string | null;
 }
 
-export function LoginForm({ 
-        className, 
-        onSubmit, 
-        show2FA, 
+export function LoginForm({
+        className,
+        onSubmit,
+        show2FA,
         qrData,
-        onVerify2FA, 
-        onCancel2FA, 
-        ...props 
+        onVerify2FA,
+        onCancel2FA,
+        error,
+        ...props
     }: LoginFormProps) {
 
+    const [otpValue, setOtpValue] = useState("");
+
+    useEffect(() => {
+        if (!show2FA) {
+            setOtpValue("");
+        }
+    }, [show2FA]);
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault(); 
+        e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData);
         onSubmit(data); // Envía {email: '...', password: '...'} a LoginPage
     };
 
-    const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value.replace(/\D/g, ""); // Solo números
-        if (val.length <= 6) {
-            // Podrías usar un estado local si quieres mostrar los guiones bajos _ _ _ _ _ _
-            if (val.length === 6) {
-                onVerify2FA(val);
-            }
+    const handleOtpChange = (val: string) => {
+        setOtpValue(val);
+        if (val.length === 6) {
+            onVerify2FA(val);
         }
     };
 
-    console.log("DATOS_QR:", qrData)
-    
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
@@ -62,6 +71,11 @@ export function LoginForm({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {error && (
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
                     {!show2FA ? (
                         /* LOGIN */
                         <form onSubmit={handleSubmit}>
@@ -111,18 +125,20 @@ export function LoginForm({
                                 </div>
                             )}
 
-                            <div className="grid gap-2 text-center">
+                            <div className="flex flex-col items-center gap-2">
                                 <Label className="text-[10px] uppercase text-zinc-500">
                                     {qrData ? "CONFIRM_SETUP_CODE" : "ENTER_6_DIGIT_CODE"}
                                 </Label>
-                                <Input 
-                                    name="2fa_code" 
-                                    placeholder="000000" 
-                                    className="text-center text-2xl tracking-[0.5em] text-[#00ff00] bg-black border-2 border-zinc-800 focus:border-[#00ff00]"
-                                    maxLength={6}
-                                    autoFocus
-                                    onChange={handleCodeChange}
-                                />
+                                <InputOTP maxLength={6} value={otpValue} onChange={handleOtpChange} autoFocus>
+                                    <InputOTPGroup>
+                                        <InputOTPSlot index={0} />
+                                        <InputOTPSlot index={1} />
+                                        <InputOTPSlot index={2} />
+                                        <InputOTPSlot index={3} />
+                                        <InputOTPSlot index={4} />
+                                        <InputOTPSlot index={5} />
+                                    </InputOTPGroup>
+                                </InputOTP>
                             </div>
                             
                             <Button variant="outline" className="w-full" onClick={onCancel2FA}>

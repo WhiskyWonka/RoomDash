@@ -9,8 +9,10 @@ use App\Http\Controllers\Api\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreRequest;
 use App\Http\Requests\Tenant\TenantAdminStoreRequest;
+use App\Http\Requests\Tenant\TenantAdminUpdateRequest;
 use App\Http\Requests\Tenant\UpdateRequest;
-use Application\Tenant\DTOs\CreateAdminRequest;
+use Application\Tenant\DTOs\CreateAdminDTO;
+use Application\Tenant\DTOs\UpdateAdminDTO;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 
@@ -81,6 +83,51 @@ class TenantController extends Controller implements TenantEndpoints
         return $this->success(null, 'Tenant deleted');
     }
 
+    public function getAdmin(string $tenantId): JsonResponse
+    {
+        $user = $this->tenants->findAdminUser($tenantId);
+
+        if (! $user) {
+            return $this->error('No admin user found', 404);
+        }
+
+        return $this->success($user);
+    }
+
+    public function updateTenantAdmin(TenantAdminUpdateRequest $request, string $tenantId): JsonResponse
+    {
+        $data = $request->validated();
+
+        $user = $this->tenants->findAdminUser($tenantId);
+
+        if (! $user) {
+            return $this->error('No admin user found', 404);
+        }
+
+        $this->tenants->updateAdminUser($tenantId, $user->id, new UpdateAdminDTO(
+            email: $data['email'],
+            username: $data['username'],
+            firstName: $data['first_name'],
+            lastName: $data['last_name'],
+            password: $data['password'] ?? null,
+        ));
+
+        return $this->success(null, 'Admin updated');
+    }
+
+    public function deleteAdmin(string $tenantId): JsonResponse
+    {
+        $user = $this->tenants->findAdminUser($tenantId);
+
+        if (! $user) {
+            return $this->error('No admin user found', 404);
+        }
+
+        $this->tenants->deleteAdminUser($tenantId, $user->id);
+
+        return $this->success(null, 'Admin deleted');
+    }
+
     public function createTenantAdmin(TenantAdminStoreRequest $request, $tenantId): JsonResponse
     {
         $data = $request->validated();
@@ -91,7 +138,7 @@ class TenantController extends Controller implements TenantEndpoints
             return $this->error('Not found', 404);
         }
 
-        $this->tenants->createAdminUser(new CreateAdminRequest(
+        $this->tenants->createAdminUser(new CreateAdminDTO(
             email: $data['email'],
             password: $data['password'],
             username: $data['username'],

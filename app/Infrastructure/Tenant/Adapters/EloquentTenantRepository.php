@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Infrastructure\Tenant\Adapters;
 
-use Application\Tenant\DTOs\CreateAdminRequest;
+use Application\Tenant\DTOs\CreateAdminDTO;
+use Application\Tenant\DTOs\UpdateAdminDTO;
 use DateTimeImmutable;
 use Domain\Auth\Entities\User as UserEntity;
 use Domain\Tenant\Entities\Tenant as TenantEntity;
@@ -71,23 +72,63 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         $model->delete();
     }
 
-    public function createAdminUser(CreateAdminRequest $data, $tenantId): UserEntity
+    public function createAdminUser(CreateAdminDTO $data, $tenantId): UserEntity
     {
         $tenant = TenantModel::findOrFail($tenantId);
 
-        $user = $tenant->run(function () use ($data) {
+        return $tenant->run(function () use ($data) {
             $passwordHasher = new LaravelPasswordHasher;
 
-            User::create([
+            return User::create([
                 'email' => $data->email,
                 'username' => $data->username,
                 'password' => $passwordHasher->hash($data->password),
                 'first_name' => $data->firstName,
                 'last_name' => $data->lastName,
-            ]);
+            ])->toEntity();
         });
+    }
 
-        return $user->toEntity();
+    public function findAdminUser(string $tenantId): ?UserEntity
+    {
+        $tenant = TenantModel::find($tenantId);
+
+        if (! $tenant) {
+            return null;
+        }
+
+        return $tenant->run(fn () => ($user = User::first()) ? $user->toEntity() : null);
+    }
+
+    public function updateAdminUser(string $tenantId, string $userId, UpdateAdminDTO $data): UserEntity
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        return $tenant->run(function () use ($userId, $data) {
+            $model = User::findOrFail($userId);
+
+            $updates = [
+                'email' => $data->email,
+                'username' => $data->username,
+                'first_name' => $data->firstName,
+                'last_name' => $data->lastName,
+            ];
+
+            if ($data->password !== null) {
+                $updates['password'] = (new LaravelPasswordHasher)->hash($data->password);
+            }
+
+            $model->update($updates);
+
+            return $model->fresh()->toEntity();
+        });
+    }
+
+    public function deleteAdminUser(string $tenantId, string $userId): void
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        $tenant->run(fn () => User::findOrFail($userId)->delete());
     }
 
     private function toEntity(TenantModel $model): TenantEntity

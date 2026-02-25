@@ -19,9 +19,8 @@ function SuperAdminApp() {
     const isPublicRoute = location.pathname.includes('/login') || location.pathname.includes('/verify-email');
 
     useEffect(() => {
-        // Validamos siempre, pero el Contexto ya sabe si mostrar loading o no
         checkAuth();
-    }, [location.pathname, checkAuth]);
+    }, [checkAuth]);
 
     if (loading && !isPublicRoute) {
         return (
@@ -30,8 +29,6 @@ function SuperAdminApp() {
             </div>
         );
     }
-
-    if (loading) return null; // O un spinner global
 
     return (
         <Routes>
