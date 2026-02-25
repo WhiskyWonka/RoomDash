@@ -24,7 +24,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await authApi.me();
+            const response = await authApi.me();
+            const data = response.data;
             setState({
                 user: data.user,
                 twoFactorPending: data.twoFactorPending || false
