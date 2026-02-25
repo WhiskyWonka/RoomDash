@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { Checkbox } from "@/components/ui/8bit/checkbox";
 import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/shadcn/field";
+import { Separator } from "@/components/ui/8bit/separator"
 
 import { Dialog } from "@/components/ui/8bit/dialog"
 
@@ -110,11 +111,15 @@ export function TenantDialog({ open, tenant, onClose, onSubmit, onCreateAdmin }:
               )}
             />
           )}
+          <Separator />
           <DialogFooter className="gap-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             {tenant && onCreateAdmin && (
-              <Button type="button" variant="outline" onClick={onCreateAdmin}>Admin User</Button>
+              <Button className="w-full" type="button" variant="outline" onClick={onCreateAdmin}>Admin User</Button>
             )}
+          </DialogFooter>
+            <Separator/>
+          <DialogFooter className="gap-4">
+            <Button className="mr-auto" type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">{tenant ? "Save" : "Create"}</Button>
           </DialogFooter>
         </form>
