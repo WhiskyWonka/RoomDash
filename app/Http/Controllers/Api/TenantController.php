@@ -13,6 +13,9 @@ use App\Http\Requests\Tenant\TenantAdminUpdateRequest;
 use App\Http\Requests\Tenant\UpdateRequest;
 use Application\Tenant\DTOs\CreateAdminDTO;
 use Application\Tenant\DTOs\UpdateAdminDTO;
+use Application\Tenant\UseCases\CreateAdminUseCase;
+use Application\Tenant\UseCases\DeleteAdminUseCase;
+use Application\Tenant\UseCases\UpdateAdminUseCase;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 
@@ -22,6 +25,9 @@ class TenantController extends Controller implements TenantEndpoints
 
     public function __construct(
         private readonly TenantRepositoryInterface $tenants,
+        private readonly CreateAdminUseCase $createAdminUseCase,
+        private readonly UpdateAdminUseCase $updateAdminUseCase,
+        private readonly DeleteAdminUseCase $deleteAdminUseCase
     ) {}
 
     public function index(): JsonResponse
@@ -98,32 +104,27 @@ class TenantController extends Controller implements TenantEndpoints
     {
         $data = $request->validated();
 
-        $user = $this->tenants->findAdminUser($tenantId);
-
-        if (! $user) {
-            return $this->error('No admin user found', 404);
+        try {
+            $user = $this->updateAdminUseCase->execute($tenantId, new UpdateAdminDTO(
+                email: $data['email'],
+                username: $data['username'],
+                firstName: $data['first_name'],
+                lastName: $data['last_name'],
+            ));
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 400);
         }
 
-        $this->tenants->updateAdminUser($tenantId, $user->id, new UpdateAdminDTO(
-            email: $data['email'],
-            username: $data['username'],
-            firstName: $data['first_name'],
-            lastName: $data['last_name'],
-            password: $data['password'] ?? null,
-        ));
-
-        return $this->success(null, 'Admin updated');
+        return $this->success($user, 'Admin updated');
     }
 
     public function deleteAdmin(string $tenantId): JsonResponse
     {
-        $user = $this->tenants->findAdminUser($tenantId);
-
-        if (! $user) {
-            return $this->error('No admin user found', 404);
+        try {
+            $this->deleteAdminUseCase->execute($tenantId);
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 400);
         }
-
-        $this->tenants->deleteAdminUser($tenantId, $user->id);
 
         return $this->success(null, 'Admin deleted');
     }
@@ -132,20 +133,17 @@ class TenantController extends Controller implements TenantEndpoints
     {
         $data = $request->validated();
 
-        $tenant = $this->tenants->findById($tenantId);
-
-        if (! $tenant) {
-            return $this->error('Not found', 404);
+        try {
+            $user = $this->createAdminUseCase->execute($tenantId, new CreateAdminDTO(
+                email: $data['email'],
+                username: $data['username'],
+                firstName: $data['first_name'],
+                lastName: $data['last_name'],
+            ));
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 400);
         }
 
-        $this->tenants->createAdminUser(new CreateAdminDTO(
-            email: $data['email'],
-            password: $data['password'],
-            username: $data['username'],
-            firstName: $data['first_name'],
-            lastName: $data['last_name'],
-        ), $tenantId);
-
-        return $this->success(null, 'Tenant admin created');
+        return $this->success($user, 'Tenant admin created');
     }
 }

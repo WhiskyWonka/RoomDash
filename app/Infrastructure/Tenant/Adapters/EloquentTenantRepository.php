@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Infrastructure\Tenant\Adapters;
 
-use Application\Tenant\DTOs\CreateAdminDTO;
-use Application\Tenant\DTOs\UpdateAdminDTO;
 use DateTimeImmutable;
 use Domain\Auth\Entities\User as UserEntity;
+use Domain\Auth\Ports\EmailVerificationServiceInterface;
 use Domain\Tenant\Entities\Tenant as TenantEntity;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Infrastructure\Auth\Models\User;
@@ -16,6 +15,10 @@ use Infrastructure\Tenant\Models\Tenant as TenantModel;
 
 class EloquentTenantRepository implements TenantRepositoryInterface
 {
+    public function __construct(
+        private readonly EmailVerificationServiceInterface $emailVerification,
+    ) {}
+
     public function findById(string $id): ?TenantEntity
     {
         $model = TenantModel::find($id);
@@ -72,20 +75,26 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         $model->delete();
     }
 
-    public function createAdminUser(CreateAdminDTO $data, $tenantId): UserEntity
+    public function createAdminUser(array $data, $tenantId): UserEntity
     {
         $tenant = TenantModel::findOrFail($tenantId);
 
         return $tenant->run(function () use ($data) {
             $passwordHasher = new LaravelPasswordHasher;
 
-            return User::create([
-                'email' => $data->email,
-                'username' => $data->username,
-                'password' => $passwordHasher->hash($data->password),
-                'first_name' => $data->firstName,
-                'last_name' => $data->lastName,
-            ])->toEntity();
+            $user = User::create([
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'password' => $passwordHasher->hash($data['password']),
+                'first_name' => $data['firstName'],
+                'last_name' => $data['lastName'],
+                'is_active' => true,
+                'two_factor_enabled' => true,
+            ]);
+
+            $this->emailVerification->sendVerificationEmail($user->id);
+
+            return $user->toEntity();
         });
     }
 
@@ -100,7 +109,7 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         return $tenant->run(fn () => ($user = User::first()) ? $user->toEntity() : null);
     }
 
-    public function updateAdminUser(string $tenantId, string $userId, UpdateAdminDTO $data): UserEntity
+    public function updateAdminUser(string $tenantId, string $userId, array $data): UserEntity
     {
         $tenant = TenantModel::findOrFail($tenantId);
 
@@ -108,15 +117,11 @@ class EloquentTenantRepository implements TenantRepositoryInterface
             $model = User::findOrFail($userId);
 
             $updates = [
-                'email' => $data->email,
-                'username' => $data->username,
-                'first_name' => $data->firstName,
-                'last_name' => $data->lastName,
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'first_name' => $data['firstName'],
+                'last_name' => $data['lastName'],
             ];
-
-            if ($data->password !== null) {
-                $updates['password'] = (new LaravelPasswordHasher)->hash($data->password);
-            }
 
             $model->update($updates);
 

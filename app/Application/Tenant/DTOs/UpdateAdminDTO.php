@@ -11,6 +11,5 @@ final class UpdateAdminDTO
         public readonly string $username,
         public readonly string $firstName,
         public readonly string $lastName,
-        public readonly ?string $password = null,
     ) {}
 }

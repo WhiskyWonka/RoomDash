@@ -1,5 +1,4 @@
 import type { Tenant, CreateTenantInput, UpdateTenantInput, CreateTenantAdminInput, UpdateTenantAdminInput } from "@/types/tenant";
-import type { User } from "@/types/user";
 import type { User, CreateUserInput, UpdateUserInput } from "@/types/user";
 import type { Feature, CreateFeatureInput, UpdateFeatureInput } from "@/types/feature";
 
