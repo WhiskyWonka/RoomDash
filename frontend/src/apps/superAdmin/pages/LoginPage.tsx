@@ -58,13 +58,11 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 // Si no hay qrData, es VERIFICACIÓN normal
                 await authApi.verify2FA(code);
             }
+
+            console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
             
             await onLoginSuccess();
-            navigate("/admin/dashboard", { replace: true });
             
-            /*setTimeout(() => {
-                navigate("/superadmin/dashboard", { replace: true });
-            }, 200);*/
         } catch (error: any) {
             console.error("ERROR_2FA:", error);
             alert("Código incorrecto");
