@@ -6,9 +6,9 @@ import UsersPage from './pages/UsersPage'
 import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
 import { useEffect } from "react";
-import VerifyUserPage from './pages/VerifyUserPage';
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
+import VerifyUserPage from './pages/VerifyUserPage';
 
 
 function SuperAdminApp() {
@@ -20,7 +20,7 @@ function SuperAdminApp() {
 
     useEffect(() => {
         checkAuth();
-    }, [checkAuth]);
+    }, []);
 
     if (loading && !isPublicRoute) {
         return (

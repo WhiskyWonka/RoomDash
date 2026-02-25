@@ -1,124 +1,58 @@
-import { useEffect, useState } from "react";
-import type { Tenant } from "@/types/tenant";
-import type { User } from "@/types/user";
-import { tenantsApi } from "@/lib/api";
-import { TenantTable } from "@/components/ui/8bit/blocks/tenants/TenantTable";
-import { TenantDialog } from "@/components/ui/8bit/blocks/tenants/TenantDialog";
-import { TenantAdminDialog } from "@/components/ui/8bit/blocks/tenants/TenantAdminDialog";
-import { DeleteTenantDialog } from "@/components/ui/8bit/blocks/tenants/DeleteTenantDialog";
-import { DeleteTenantAdminDialog } from "@/components/ui/8bit/blocks/tenants/DeleteTenantAdminDialog";
+import { useTenants } from "../features/tenants/hooks/useTenants";
+import { useTenantModals } from "../features/tenants/hooks/useTenantModals";
+import { useTenantAdmin } from "../features/tenants/hooks/useTenantAdmin";
+
+import { useState } from "react";
+import { useMemo } from "react";
+import { TenantTable } from "../features/tenants/components/TenantTable";
+import { TenantDialog } from "../features/tenants/components/TenantDialog";
+import { TenantAdminDialog } from "../features/tenants/components/TenantAdminDialog";
+import { DeleteTenantDialog } from "../features/tenants/components/DeleteTenantDialog";
+import { DeleteTenantAdminDialog } from "../features/tenants/components/DeleteTenantAdminDialog";
+
 import { Button } from "@/components/ui/8bit/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/8bit/tabs";
+import { Alert } from "@/components/ui/8bit/alert";
 import { SectionHeader } from "@/components/ui/8bit/blocks/SectionHeader";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/8bit/tabs";
 
 export default function TenantsPage() {
 
-    const [tenants, setTenants] = useState<Tenant[]>([]);
     const [tab, setTab] = useState<"all" | "active" | "inactive">("all");
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [adminOpen, setAdminOpen] = useState(false);
-    const [deleteAdminOpen, setDeleteAdminOpen] = useState(false);
-    const [currentAdmin, setCurrentAdmin] = useState<User | null>(null);
-    const [editing, setEditing] = useState<Tenant | null>(null);
-    const [deleting, setDeleting] = useState<Tenant | null>(null);
 
-    const load = () => {
-        tenantsApi.list()
-        .then((response:any) => {
-            console.log("LOAD_TENANTS_RESPONSE:", response);
-            const tenantsArray = response.data?.items || [];
-            setTenants(tenantsArray);
-        })
-        .catch((error) => {
-            console.error("CRITICAL_ERROR: API_REQUEST_FAILED", error);
-        });
-    };
+    // 1. Hook de Datos Principales
+    const { tenants, loading, error, setError, createTenant, updateTenant, deleteTenant } = useTenants();
 
-    useEffect(load, []);
+    // 2. Hook de UI (Control de modales de Tenant)
+    const { modals, openCreate, openEdit, openDelete, closeModals } = useTenantModals();
 
-    const handleCreate = () => {
-        setEditing(null);
-        setDialogOpen(true);
-    };
+    // 3. Hook de Admin (Lógica extraída)
+    const adminLogic = useTenantAdmin(modals.editing);
 
-    const handleEdit = (t: Tenant) => {
-        setEditing(t);
-        setDialogOpen(true);
-    };
-
-    const handleDelete = (t: Tenant) => {
-        setDeleting(t);
-        setDeleteOpen(true);
-    };
+    // Filtrado memoizado para rendimiento
+    const filteredTenants = useMemo(() => {
+        if (tab === "active") return tenants.filter((t) => t.isActive);
+        if (tab === "inactive") return tenants.filter((t) => !t.isActive);
+        return tenants;
+    }, [tenants, tab]);
 
     const handleSubmit = async (name: string, domain: string, isActive: boolean) => {
-        try {
-            if (editing) {
-                await tenantsApi.update(editing.id, { name, domain });
-                if (isActive !== editing.isActive) {
-                    await (isActive ? tenantsApi.activate(editing.id) : tenantsApi.deactivate(editing.id));
-                }
-            } else {
-                await tenantsApi.create({ name, domain });
-            }
-            setDialogOpen(false);
-            load();
-        } catch (error) {
-            console.error("CRITICAL_ERROR: API_REQUEST_FAILED", error);
-        }
-    };
-
-    const handleCreateAdmin = async () => {
-        if (!editing) { return; }
-        setDialogOpen(false);
-        try {
-            const response = await tenantsApi.getAdmin(editing.id) as any;
-            setCurrentAdmin(response.data ?? null);
-        } catch {
-            setCurrentAdmin(null);
-        }
-        setAdminOpen(true);
-    };
-
-    const handleSubmitAdmin = async (data: any) => {
-        if (!editing) { return; }
-        if (currentAdmin) {
-            await tenantsApi.updateAdmin(editing.id, data);
-        } else {
-            await tenantsApi.createAdmin(editing.id, data);
-        }
-        setAdminOpen(false);
-    };
-
-    const handleResendAdminVerification = async () => {
-        if (!editing) { return; }
-        await tenantsApi.resendAdminVerification(editing.id);
-    };
-
-    const handleDeleteAdmin = () => {
-        setAdminOpen(false);
-        setDeleteAdminOpen(true);
-    };
-
-    const handleConfirmDeleteAdmin = async () => {
-        if (!editing) { return; }
-        await tenantsApi.deleteAdmin(editing.id);
-        setCurrentAdmin(null);
-        setDeleteAdminOpen(false);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (deleting) {
-            await tenantsApi.delete(deleting.id);
-        }
-        setDeleteOpen(false);
-        load();
+        const success = modals.editing 
+            ? await updateTenant(modals.editing.id, { name, domain, isActive })
+            : await createTenant({ name, domain, isActive });
+        if (success) closeModals();
     };
 
     return (
-        <div className="">
-            <SectionHeader action={<Button variant="outline" onClick={handleCreate}>[+] ADD_NEW_TENANT</Button>} />
+        <div className="space-y-4">
+            {error && (
+                <Alert variant="destructive" onClose={() => setError(null)}>
+                    [SYSTEM_FAILURE]: {error}
+                </Alert>
+            )}
+
+            <SectionHeader 
+                action={<Button onClick={openCreate}>[+] ADD_NEW_TENANT</Button>} 
+            />
 
             <div className="">
                 <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-4">
@@ -128,46 +62,52 @@ export default function TenantsPage() {
                         <TabsTrigger value="inactive">Inactives</TabsTrigger>
                     </TabsList>
                 </Tabs>
-                <TenantTable
-                    tenants={
-                        tab === "active" ? tenants.filter((t) => t.isActive)
-                        : tab === "inactive" ? tenants.filter((t) => !t.isActive)
-                        : tenants
-                    }
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                />
+                {loading ? (
+                    <div className="p-10 text-center animate-pulse">[LOADING_TENANT_GRID...]</div>
+                ) : (
+                    <TenantTable 
+                        tenants={filteredTenants} 
+                        onEdit={openEdit} 
+                        onDelete={openDelete} 
+                    />
+                )}
             </div>
 
-            {/* Diálogos de acción */}
+            {/* Modales de Tenant */}
             <TenantDialog
-                open={dialogOpen}
-                tenant={editing}
-                onClose={() => setDialogOpen(false)}
+                open={modals.dialogOpen}
+                tenant={modals.editing}
+                onClose={closeModals}
                 onSubmit={handleSubmit}
-                onCreateAdmin={editing ? handleCreateAdmin : undefined}
+                onCreateAdmin={modals.editing ? adminLogic.handleCreateAdmin : undefined}
             />
-            <TenantAdminDialog
-                open={adminOpen}
-                tenant={editing}
-                adminUser={currentAdmin}
-                onClose={() => setAdminOpen(false)}
-                onSubmit={handleSubmitAdmin}
-                onDelete={currentAdmin ? handleDeleteAdmin : undefined}
-                onResendVerification={currentAdmin ? handleResendAdminVerification : undefined}
-            />
-            <DeleteTenantAdminDialog
-                open={deleteAdminOpen}
-                tenant={editing}
-                adminUser={currentAdmin}
-                onClose={() => setDeleteAdminOpen(false)}
-                onConfirm={handleConfirmDeleteAdmin}
-            />
+
             <DeleteTenantDialog
-                open={deleteOpen}
-                tenant={deleting}
-                onClose={() => setDeleteOpen(false)}
-                onConfirm={handleConfirmDelete}
+                open={modals.deleteOpen}
+                tenant={modals.deleting}
+                onClose={closeModals}
+                onConfirm={async () => {
+                    if (modals.deleting && await deleteTenant(modals.deleting.id)) closeModals();
+                }}
+            />
+
+            {/* Modales de Admin (Nuevos) */}
+            <TenantAdminDialog
+                open={adminLogic.adminOpen}
+                tenant={modals.editing}
+                adminUser={adminLogic.currentAdmin}
+                onClose={() => adminLogic.setAdminOpen(false)}
+                onSubmit={adminLogic.handleSubmitAdmin}
+                onDelete={adminLogic.currentAdmin ? adminLogic.handleDeleteAdmin : undefined}
+                onResendVerification={adminLogic.currentAdmin ? adminLogic.handleResendAdminVerification : undefined}
+            />
+
+            <DeleteTenantAdminDialog
+                open={adminLogic.deleteAdminOpen}
+                tenant={modals.editing}
+                adminUser={adminLogic.currentAdmin}
+                onClose={() => adminLogic.setDeleteAdminOpen(false)}
+                onConfirm={adminLogic.handleConfirmDeleteAdmin}
             />
         </div>
     );

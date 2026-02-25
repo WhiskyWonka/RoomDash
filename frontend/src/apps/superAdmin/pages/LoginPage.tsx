@@ -55,10 +55,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 await authApi.verify2FA(code);
             }
 
+            console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
+            
             await onLoginSuccess();
-            navigate("/admin/dashboard", { replace: true });
-        } catch (err: any) {
-            setError(err.message || "Código incorrecto");
+            
+        } catch (error: any) {
+            console.error("ERROR_2FA:", error);
+            alert("Código incorrecto");
         }
     };
 
