@@ -6,6 +6,7 @@ import type { Tenant } from "@/types/tenant";
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
 import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
+import { Checkbox } from "@/components/ui/8bit/checkbox";
 import { Field, FieldLabel, FieldContent, FieldDescription, FieldError } from "@/components/ui/shadcn/field";
 
 import { Dialog } from "@/components/ui/8bit/dialog"
@@ -17,6 +18,7 @@ const tenantSchema = z.object({
     .min(1, "Domain is required")
     .max(255)
     .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  isActive: z.boolean(),
 });
 
 type TenantFormValues = z.infer<typeof tenantSchema>;
@@ -25,10 +27,11 @@ interface Props {
   open: boolean;
   tenant: Tenant | null;
   onClose: () => void;
-  onSubmit: (name: string, domain: string) => void;
+  onSubmit: (name: string, domain: string, isActive: boolean) => void;
+  onCreateAdmin?: () => void;
 }
 
-export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
+export function TenantDialog({ open, tenant, onClose, onSubmit, onCreateAdmin }: Props) {
   const form = useForm<TenantFormValues>({
     resolver: zodResolver(tenantSchema),
     defaultValues: { name: "", domain: "" },
@@ -39,12 +42,13 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
       form.reset({
         name: tenant?.name ?? "",
         domain: tenant?.domain ?? "",
+        isActive: tenant?.isActive ?? true,
       });
     }
   }, [open, tenant, form]);
 
   const handleSubmit = (values: TenantFormValues) => {
-    onSubmit(values.name, values.domain);
+    onSubmit(values.name, values.domain, values.isActive);
   };
 
   return (
@@ -85,8 +89,32 @@ export function TenantDialog({ open, tenant, onClose, onSubmit }: Props) {
               </Field>
             )}
           />
+          {tenant && (
+            <Controller
+              name="isActive"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldContent>
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="isActive"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <FieldLabel htmlFor="isActive">Active</FieldLabel>
+                    </div>
+                    <FieldDescription>Enable or disable this tenant.</FieldDescription>
+                  </FieldContent>
+                </Field>
+              )}
+            />
+          )}
           <DialogFooter className="gap-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            {tenant && onCreateAdmin && (
+              <Button type="button" variant="outline" onClick={onCreateAdmin}>Admin User</Button>
+            )}
             <Button type="submit">{tenant ? "Save" : "Create"}</Button>
           </DialogFooter>
         </form>

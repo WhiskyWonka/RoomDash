@@ -13,15 +13,12 @@ use Domain\Auth\Ports\EmailVerificationServiceInterface;
 use Domain\Auth\Ports\UserRepositoryInterface;
 use Domain\Auth\ValueObjects\Username;
 use Domain\Shared\Ports\PasswordHasherInterface;
-use Domain\Shared\Ports\UuidGeneratorInterface;
 
 class CreateUserUseCase
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly EmailVerificationServiceInterface $emailService,
-        // private readonly AuditLogRepositoryInterface $auditLogRepository,
-        private readonly UuidGeneratorInterface $uuidGenerator,
         private readonly PasswordHasherInterface $passwordHasher,
     ) {}
 

@@ -6,7 +6,7 @@ import UsersPage from './pages/UsersPage'
 import LoginPage from "./pages/LoginPage";
 import FeaturesPage from './pages/FeaturesPage'
 import { useEffect } from "react";
-import VerifyRootUserPage from './pages/VerifyRootUserPage';
+import VerifyUserPage from './pages/VerifyUserPage';
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 
@@ -19,9 +19,8 @@ function SuperAdminApp() {
     const isPublicRoute = location.pathname.includes('/login') || location.pathname.includes('/verify-email');
 
     useEffect(() => {
-        // Validamos siempre, pero el Contexto ya sabe si mostrar loading o no
         checkAuth();
-    }, [location.pathname, checkAuth]);
+    }, [checkAuth]);
 
     if (loading && !isPublicRoute) {
         return (
@@ -30,8 +29,6 @@ function SuperAdminApp() {
             </div>
         );
     }
-
-    if (loading) return null; // O un spinner global
 
     return (
         <Routes>

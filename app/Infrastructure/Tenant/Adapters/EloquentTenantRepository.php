@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Infrastructure\Tenant\Adapters;
 
-use Application\Tenant\DTOs\CreateAdminRequest;
 use DateTimeImmutable;
 use Domain\Auth\Entities\User as UserEntity;
+use Domain\Auth\Ports\EmailVerificationServiceInterface;
 use Domain\Tenant\Entities\Tenant as TenantEntity;
 use Domain\Tenant\Ports\TenantRepositoryInterface;
 use Infrastructure\Auth\Models\User;
@@ -15,6 +15,10 @@ use Infrastructure\Tenant\Models\Tenant as TenantModel;
 
 class EloquentTenantRepository implements TenantRepositoryInterface
 {
+    public function __construct(
+        private readonly EmailVerificationServiceInterface $emailVerification,
+    ) {}
+
     public function findById(string $id): ?TenantEntity
     {
         $model = TenantModel::find($id);
@@ -71,23 +75,77 @@ class EloquentTenantRepository implements TenantRepositoryInterface
         $model->delete();
     }
 
-    public function createAdminUser(CreateAdminRequest $data, $tenantId): UserEntity
+    public function createAdminUser(array $data, $tenantId): UserEntity
     {
         $tenant = TenantModel::findOrFail($tenantId);
 
-        $user = $tenant->run(function () use ($data) {
+        return $tenant->run(function () use ($data) {
             $passwordHasher = new LaravelPasswordHasher;
 
-            User::create([
-                'email' => $data->email,
-                'username' => $data->username,
-                'password' => $passwordHasher->hash($data->password),
-                'first_name' => $data->firstName,
-                'last_name' => $data->lastName,
+            $user = User::create([
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'password' => $passwordHasher->hash($data['password']),
+                'first_name' => $data['firstName'],
+                'last_name' => $data['lastName'],
+                'is_active' => true,
+                'two_factor_enabled' => true,
             ]);
-        });
 
-        return $user->toEntity();
+            $this->emailVerification->sendVerificationEmail($user->id);
+
+            return $user->toEntity();
+        });
+    }
+
+    public function findAdminUser(string $tenantId): ?UserEntity
+    {
+        $tenant = TenantModel::find($tenantId);
+
+        if (! $tenant) {
+            return null;
+        }
+
+        return $tenant->run(fn () => ($user = User::first()) ? $user->toEntity() : null);
+    }
+
+    public function updateAdminUser(string $tenantId, string $userId, array $data): UserEntity
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        return $tenant->run(function () use ($userId, $data) {
+            $model = User::findOrFail($userId);
+
+            $updates = [
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'first_name' => $data['firstName'],
+                'last_name' => $data['lastName'],
+            ];
+
+            $model->update($updates);
+
+            return $model->fresh()->toEntity();
+        });
+    }
+
+    public function deleteAdminUser(string $tenantId, string $userId): void
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        $tenant->run(fn () => User::findOrFail($userId)->delete());
+    }
+
+    public function resendAdminVerification(string $tenantId): void
+    {
+        $tenant = TenantModel::findOrFail($tenantId);
+
+        $tenant->run(function () {
+            $user = User::firstOrFail();
+
+            $this->emailVerification->invalidatePreviousTokens($user->id);
+            $this->emailVerification->sendVerificationEmail($user->id);
+        });
     }
 
     private function toEntity(TenantModel $model): TenantEntity

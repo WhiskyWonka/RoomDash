@@ -7,7 +7,7 @@ import {
   InputOTPGroup as ShadcnInputOTPGroup,
   InputOTPSeparator as ShadcnInputOTPSeparator,
   InputOTPSlot as ShadcnInputOTPSlot,
-} from "@/shadcn/input-otp";
+} from "@/components/ui/shadcn/input-otp";
 
 import "@/components/ui/8bit/styles/retro.css";
 
