@@ -58,10 +58,13 @@ export default function LoginPage() {
                 await authApi.verify2FA(code);
             }
 
-            await checkAuth();
-            navigate("/admin/dashboard", { replace: true });
-        } catch (err: any) {
-            setError(err.message || "Código incorrecto");
+            console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
+            
+            await onLoginSuccess();
+            
+        } catch (error: any) {
+            console.error("ERROR_2FA:", error);
+            alert("Código incorrecto");
         }
     };
 

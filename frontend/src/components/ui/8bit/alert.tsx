@@ -6,7 +6,7 @@ import {
   Alert as ShadcnAlert,
   AlertDescription as ShadcnAlertDescription,
   AlertTitle as ShadcnAlertTitle,
-} from "@/components/ui/alert";
+} from "@/components/ui/shadcn/alert";
 
 export const alertVariants = cva("", {
   variants: {
@@ -27,7 +27,9 @@ export const alertVariants = cva("", {
 
 export interface BitAlertProps
   extends React.ComponentProps<"div">,
-    VariantProps<typeof alertVariants> {}
+    VariantProps<typeof alertVariants> {
+      onClose?: () => void;
+    }
 
 function Alert({ children, ...props }: BitAlertProps) {
   const { variant, className, font } = props;

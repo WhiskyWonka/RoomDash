@@ -24,12 +24,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await authApi.me();
-            const data = response.data;
-            setState({
-                user: data.user,
-                twoFactorPending: data.twoFactorPending || false
-            });
+            const response: any = await authApi.me();
+        
+            // El payload real de Laravel está en response.data
+            const payload = response.data; 
+
+            if (payload && payload.user) {
+                setState({
+                    user: payload.user,
+                    twoFactorPending: payload.twoFactorPending || false
+                });
+            } else {
+                // Si no hay usuario en el payload, reseteamos
+                setState({ user: null, twoFactorPending: false });
+            }
         } catch (error) {
             setState({ user: null, twoFactorPending: false });
         } finally {
