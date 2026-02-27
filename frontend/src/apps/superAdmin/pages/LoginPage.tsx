@@ -60,7 +60,10 @@ export default function LoginPage() {
 
             console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
             
-            await onLoginSuccess();
+            await checkAuth(); 
+            
+            // Y navegamos al dashboard
+            navigate("/admin/dashboard", { replace: true });
             
         } catch (error: any) {
             console.error("ERROR_2FA:", error);
