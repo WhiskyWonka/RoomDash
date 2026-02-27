@@ -45,6 +45,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, []);
 
+    React.useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
     const logout = async () => {
         try {
             await authApi.logout();

@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { authApi } from "@/lib/authApi";
 import { LoginForm } from "@/components/ui/8bit/blocks/login-form";
+import { useAuth } from "@/context/AuthContext";
 
-interface LoginPageProps {
-    onLoginSuccess: () => Promise<void>;
-}
 
-export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export default function LoginPage() {
+    const { checkAuth, isAuthenticated } = useAuth();
     const [show2FA, setShow2FA] = useState(false);
     const [qrData, setQrData] = useState<{ qrCode: string; secret: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    if (isAuthenticated) {
+        return <Navigate to="/admin/dashboard" replace />;
+    }
 
     const handleLogin = async (data: any) => {
         setError(null);
@@ -38,7 +41,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 setShow2FA(true);
 
             } else {
-                await onLoginSuccess();
+                await checkAuth();
                 navigate("/admin/dashboard", { replace: true });
             }
         } catch (err: any) {
@@ -57,7 +60,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
             console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
             
-            await onLoginSuccess();
+            await checkAuth(); 
+            
+            // Y navegamos al dashboard
+            navigate("/admin/dashboard", { replace: true });
             
         } catch (error: any) {
             console.error("ERROR_2FA:", error);

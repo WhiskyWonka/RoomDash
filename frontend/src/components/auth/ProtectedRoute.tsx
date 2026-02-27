@@ -1,8 +1,11 @@
-// src/components/auth/ProtectedRoute.tsx
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+interface ProtectedRouteProps {
+    children?: React.ReactNode;
+}
+
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
@@ -13,5 +16,12 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" replace />;
+    if (!isAuthenticated) {
+        // Podríamos guardar la ruta intentada para volver después del login
+        return <Navigate to="/admin/login" replace />;
+    }
+
+    // Si tiene children (uso tradicional), los muestra. 
+    // Si no, renderiza las rutas hijas definidas en el router (Outlet).
+    return children ? <>{children}</> : <Outlet />;
 };
