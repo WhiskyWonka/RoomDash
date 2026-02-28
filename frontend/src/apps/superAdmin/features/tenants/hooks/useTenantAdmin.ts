@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { tenantsApi } from "@/lib/api";
+import { tenantsApi } from "../../../services/tenantsApi";
 import type { User } from "@/types/user";
 import type { Tenant } from "@/types/tenant";
 
@@ -11,9 +11,13 @@ export function useTenantAdmin(editingTenant: Tenant | null) {
     const handleCreateAdmin = async () => {
         if (!editingTenant) return;
         try {
-            const response = await tenantsApi.getAdmin(editingTenant.id) as any;
-            setCurrentAdmin(response.data ?? null);
-        } catch {
+            const response = await tenantsApi.getAdmin(editingTenant.id);
+            
+            // Laravel manda { success, message, data: { data: User } } 
+            // O a veces directamente { data: User } según tu API
+            setCurrentAdmin(response.data?.data || response.data || null);
+        } catch (err) {
+            console.error("Error fetching admin:", err);
             setCurrentAdmin(null);
         } finally {
             setAdminOpen(true);
@@ -22,17 +26,26 @@ export function useTenantAdmin(editingTenant: Tenant | null) {
 
     const handleSubmitAdmin = async (data: any) => {
         if (!editingTenant) return;
-        if (currentAdmin) {
-            await tenantsApi.updateAdmin(editingTenant.id, data);
-        } else {
-            await tenantsApi.createAdmin(editingTenant.id, data);
+        try {
+            if (currentAdmin) {
+                await tenantsApi.updateAdmin(editingTenant.id, data);
+            } else {
+                await tenantsApi.createAdmin(editingTenant.id, data);
+            }
+            setAdminOpen(false);
+        } catch (err: any) {
+            // Aquí podrías usar un toast o alert con err.message
+            alert(err.message || "Error al guardar el administrador");
         }
-        setAdminOpen(false);
     };
 
     const handleResendAdminVerification = async () => {
         if (!editingTenant) return;
-        await tenantsApi.resendAdminVerification(editingTenant.id);
+        try {
+            await tenantsApi.resendAdminVerification(editingTenant.id);
+        } catch (err: any) {
+            alert(err.message);
+        }
     };
 
     const handleDeleteAdmin = () => {
@@ -42,9 +55,13 @@ export function useTenantAdmin(editingTenant: Tenant | null) {
 
     const handleConfirmDeleteAdmin = async () => {
         if (!editingTenant) return;
-        await tenantsApi.deleteAdmin(editingTenant.id);
-        setCurrentAdmin(null);
-        setDeleteAdminOpen(false);
+        try {
+            await tenantsApi.deleteAdmin(editingTenant.id);
+            setCurrentAdmin(null);
+            setDeleteAdminOpen(false);
+        } catch (err: any) {
+            alert(err.message);
+        }
     };
 
     return {

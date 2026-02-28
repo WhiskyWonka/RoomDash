@@ -51,9 +51,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = async () => {
         try {
+            // 1. Llamada a la API con Axios (borra la sesión en Laravel)
             await authApi.logout();
+        } catch (error) {
+            console.error("LOGOUT_API_ERROR:", error);
         } finally {
+            // 2. Limpieza TOTAL del estado de React
             setState({ user: null, twoFactorPending: false });
+            
+            // 3. Redirección forzada
             window.location.href = "/admin/login";
         }
     };

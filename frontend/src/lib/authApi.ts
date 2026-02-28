@@ -1,59 +1,41 @@
-import { request } from "./api";
+import api from "./api";
 
-//const AUTH_BASE = "/api";
+
 const AUTH_BASE = "/api/auth";
 
 export const authApi = {
-    // CSRF cookie
-    csrf: () => request<void>("/sanctum/csrf-cookie"),
+    // CSRF cookie - Axios maneja las cookies automáticamente con withCredentials
+    csrf: () => api.get("/sanctum/csrf-cookie"),
 
+    // Fíjate: ya no hay JSON.stringify, solo pasas el objeto
     login: (credentials: { email: string; password: string }) =>
-        request<any>(`${AUTH_BASE}/login`, {
-            method: "POST",
-            body: JSON.stringify(credentials),
-        }),
+        api.post(`${AUTH_BASE}/login`, credentials),
 
     verify2FA: (code: string) =>
-        request<any>(`${AUTH_BASE}/verify-2fa`, {
-            method: "POST",
-            body: JSON.stringify({ code }),
-        }),
+        api.post(`${AUTH_BASE}/verify-2fa`, { code }),
 
     logout: () =>
-        request<void>(`${AUTH_BASE}/logout`, { method: "POST" }),
+        api.post(`${AUTH_BASE}/logout`),
 
     me: () => 
-        request<any>(`${AUTH_BASE}/me`),
+        api.get(`${AUTH_BASE}/me`),
 
-    // Solo para validar si el link es usable al cargar la página
     checkVerificationToken: (token: string) =>
-        request<any>(`${AUTH_BASE}/check-token/${token}`, {
-            method: "GET",
-        }),
+        api.get(`${AUTH_BASE}/check-token/${token}`),
 
-    setup2FA: () => request<any>("/api/auth/2fa/setup"),
+    setup2FA: () => 
+        api.get(`${AUTH_BASE}/2fa/setup`),
 
     confirm2FA: (code: string) =>
-        request<any>(`${AUTH_BASE}/2fa/confirm`, {
-            method: "POST",
-            body: JSON.stringify({ code }),
-        }),
+        api.post(`${AUTH_BASE}/2fa/confirm`, { code }),
 
-    // La acción definitiva que marca el email como verificado y setea pass
     verifyEmail: (data: { 
         token: string; 
         password: string; 
         password_confirmation: string 
     }) =>
-        request<any>(`${AUTH_BASE}/verify-email`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        }),
+        api.post(`${AUTH_BASE}/verify-email`, data),
 
-    // Por si el token expiró y el usuario necesita otro
     resendVerificationEmail: (email: string) =>
-        request<any>(`${AUTH_BASE}/resend-verification`, {
-            method: "POST",
-            body: JSON.stringify({ email }),
-        }),
+        api.post(`${AUTH_BASE}/resend-verification`, { email }),
 };
