@@ -1,7 +1,7 @@
 import { SectionHeader } from "@/components/ui/8bit/blocks/SectionHeader";
 import { Button } from "@/components/ui/8bit/button";
 import type { Feature } from "@/types/feature";
-import { featuresApi } from "@/lib/api";
+import { featuresApi } from "../services/featuresApi";
 import { useEffect, useState } from "react";
 import { FeatureTable } from "@/components/ui/8bit/blocks/features/FeatureTable";
 import { FeatureDialog } from "@/components/ui/8bit/blocks/features/FeatureDialog";
