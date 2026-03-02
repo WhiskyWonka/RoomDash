@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/8bit/button";
-import { SetPasswordForm } from "@/components/ui/8bit/blocks/users/SetPasswordForm";
+import { SetPasswordForm } from "@/apps/superAdmin/features/users/components/SetPasswordForm";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/8bit/card";
 
 type Step = "FORM" | "SUCCESS" | "ERROR";

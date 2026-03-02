@@ -22,6 +22,7 @@ interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
     onVerify2FA: (code: string) => void;
     onCancel2FA: () => void;
     error?: string | null;
+    isLoading?: boolean;
 }
 
 export function LoginForm({
@@ -32,6 +33,7 @@ export function LoginForm({
         onVerify2FA,
         onCancel2FA,
         error,
+        isLoading,
         ...props
     }: LoginFormProps) {
 

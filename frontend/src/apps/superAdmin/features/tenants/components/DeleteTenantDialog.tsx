@@ -1,21 +1,31 @@
 import type { Tenant } from "@/types/tenant";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/8bit/dialog";
 import { Button } from "@/components/ui/8bit/button";
-import { useTenantDelete } from "../hooks/useTenantDelete";
+import { useState } from "react";
 
 interface Props {
     open: boolean;
     tenant: Tenant | null;
     onClose: () => void;
-    onConfirm: () => Promise<void>;
+    onConfirm: () => Promise<void>; // Esta ahora es la mutation.mutateAsync
 }
 
 export function DeleteTenantDialog({ open, tenant, onClose, onConfirm }: Props) {
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    const { isDeleting, handleConfirm } = useTenantDelete(onConfirm);
+    const handleConfirm = async () => {
+        setIsDeleting(true);
+        try {
+            await onConfirm();
+            // No hace falta onClose() acá porque el padre lo cierra en el .then() o onSuccess
+        } catch (error) {
+            // El error ya lo captura el hook global, pero acá frenamos el loading
+            setIsDeleting(false); 
+        }
+    };
 
     return (
-        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v && !isDeleting) onClose(); }}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Delete Tenant</DialogTitle>
@@ -29,11 +39,13 @@ export function DeleteTenantDialog({ open, tenant, onClose, onConfirm }: Props) 
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button variant="outline" onClick={onClose} disabled={isDeleting}>
+                        CANCEL
+                    </Button>
                     <Button 
                         variant="destructive" 
                         disabled={isDeleting}
-                        onClick={onConfirm}
+                        onClick={handleConfirm}
                     >
                         {isDeleting ? "DELETING..." : "Delete"}
                     </Button>

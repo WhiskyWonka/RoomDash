@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/8bit/button";
 import type { Feature } from "@/types/feature";
 import { featuresApi } from "../services/featuresApi";
 import { useEffect, useState } from "react";
-import { FeatureTable } from "@/components/ui/8bit/blocks/features/FeatureTable";
-import { FeatureDialog } from "@/components/ui/8bit/blocks/features/FeatureDialog";
-import { DeleteFeatureDialog } from "@/components/ui/8bit/blocks/features/DeleteFeatureDialog";
+import { FeatureTable } from "@/apps/superAdmin/features/features/components/FeatureTable";
+import { FeatureDialog } from "@/apps/superAdmin/features/features/components/FeatureDialog";
+import { DeleteFeatureDialog } from "@/apps/superAdmin/features/features/components/DeleteFeatureDialog";
 
 export default function FeaturesPage() {
 

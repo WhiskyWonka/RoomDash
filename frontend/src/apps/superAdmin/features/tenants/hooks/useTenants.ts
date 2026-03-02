@@ -1,54 +1,56 @@
-import { useState, useEffect, useCallback } from "react";
-import type { Tenant } from "@/types/tenant";
 import { tenantsApi } from "../../../services/tenantsApi";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 
 export function useTenants() {
-    const [tenants, setTenants] = useState<Tenant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    
+    // 1. Necesitamos este estado local para poder "limpiar" el error desde la UI
+    const [localError, setLocalError] = useState<string | null>(null);
 
-    const loadTenants = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response: any = await tenantsApi.list();
-            // AJUSTE: Dependiendo de cómo responda tu Laravel, 
-            // puede ser response.data o response.data.items
-            setTenants(response.data?.items || response.data || []);
-        } catch (err: any) {
-            // El interceptor ya nos da el mensaje limpio en err.message
-            setError("ERR_FETCHING_TENANTS: " + err.message);
-        } finally {
-            setLoading(false);
+    const { 
+        data: response, 
+        isLoading: loading, 
+        error: queryError 
+    } = useQuery({
+        queryKey: ['tenants'],
+        queryFn: tenantsApi.list
+    });
+
+    // 2. Sincronizamos el error de la query con el estado local
+    useEffect(() => {
+        if (queryError) {
+            setLocalError((queryError as any).message);
         }
-    }, []);
+    }, [queryError]);
 
-    useEffect(() => { loadTenants(); }, [loadTenants]);
+    // MUTACIONES (Se mantienen igual)
+    const { mutateAsync: createMutation } = useMutation({
+        mutationFn: (data: any) => tenantsApi.create(data),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenants'] })
+    });
 
-    // Esta función es genial porque recarga la lista automáticamente tras un cambio
-    const executeAction = async (action: () => Promise<any>) => {
-        try {
-            setError(null);
-            await action();
-            await loadTenants(); // Recarga la lista para ver el cambio (ej: nuevo tenant)
-            return true;
-        } catch (err: any) {
-            // Ya no necesitas err.response?.data?.message
-            // El interceptor ya hizo ese trabajo sucio por vos
-            setError(err.message || "ACTION_FAILED");
-            return false;
-        }
-    };
+    const { mutateAsync: updateMutation } = useMutation({
+        mutationFn: ({ id, data }: { id: string | number, data: any }) => tenantsApi.update(id, data),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenants'] })
+    });
+
+    const { mutateAsync: deleteMutation } = useMutation({
+        mutationFn: (id: string | number) => tenantsApi.delete(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenants'] })
+    });
 
     return {
-        tenants,
+        tenants: response?.data?.items || response?.data || [],
         loading,
-        error,
-        setError,
-        // Funciones listas para usar en el componente
-        createTenant: (data: any) => executeAction(() => tenantsApi.create(data)),
-        updateTenant: (id: string | number, data: any) => executeAction(() => tenantsApi.update(id, data)),
-        deleteTenant: (id: string | number) => executeAction(() => tenantsApi.delete(id)),
-        refresh: loadTenants // Útil para un botón de "actualizar" manual
+        // 3. Devolvemos el error local y el setter para que el componente padre no de error
+        error: localError,
+        setError: setLocalError, 
+        
+        createTenant: createMutation,
+        updateTenant: (id: string | number, data: any) => updateMutation({ id, data }),
+        deleteTenant: deleteMutation,
+        
+        refresh: () => queryClient.invalidateQueries({ queryKey: ['tenants'] })
     };
 }

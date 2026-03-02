@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "../button";
+import { Button } from "../../../../../components/ui/8bit/button";
 
 export function LogoutButton() {
     const { logout } = useAuth();

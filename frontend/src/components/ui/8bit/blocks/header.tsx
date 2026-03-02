@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/8bit/sidebar"
 import { useLocation } from "react-router-dom"
-import { LogoutButton } from "./logout-button"
+import { LogoutButton } from "../../../../apps/superAdmin/features/login/components/logout-button"
 
 export function Header() {
 

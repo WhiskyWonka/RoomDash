@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authApi } from "@/lib/authApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface AuthState {
     user: any;
@@ -18,52 +19,52 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    const queryClient = useQueryClient();
+    
+    // Mantenemos tu STATE original exactamente igual
     const [state, setState] = useState<AuthState>({ user: null, twoFactorPending: false });
-    const [loading, setLoading] = useState(true);
 
-    const checkAuth = useCallback(async () => {
-        setLoading(true);
-        try {
-            const response: any = await authApi.me();
-        
-            // El payload real de Laravel está en response.data
-            const payload = response.data; 
+    // 1. Usamos useQuery como "motor" para pedir el /me
+    const { data: response, isLoading: loading, refetch } = useQuery({
+        queryKey: ["auth-user"],
+        queryFn: authApi.me,
+        retry: false, // Importante: si no hay sesión, no queremos reintentos infinitos
+        staleTime: 1000 * 60 * 5, // 5 minutos de caché para que no parpadee al navegar
+    });
 
-            if (payload && payload.user) {
-                setState({
-                    user: payload.user,
-                    twoFactorPending: payload.twoFactorPending || false
-                });
-            } else {
-                // Si no hay usuario en el payload, reseteamos
-                setState({ user: null, twoFactorPending: false });
-            }
-        } catch (error) {
+    // 2. Sincronizamos la Query con tu State (La clave para no romper tu lógica)
+    useEffect(() => {
+        if (response?.data) {
+            const payload = response.data;
+            setState({
+                user: payload.user || null,
+                twoFactorPending: payload.twoFactorPending || false
+            });
+        } else {
+            // Si la query falla o no hay data, reseteamos el estado
             setState({ user: null, twoFactorPending: false });
-        } finally {
-            setLoading(false);
         }
-    }, []);
+    }, [response]);
 
-    React.useEffect(() => {
-        checkAuth();
-    }, [checkAuth]);
+    // Tu función checkAuth ahora simplemente le pide a React Query que refresque
+    const checkAuth = useCallback(async () => {
+        await refetch();
+    }, [refetch]);
 
     const logout = async () => {
         try {
-            // 1. Llamada a la API con Axios (borra la sesión en Laravel)
             await authApi.logout();
         } catch (error) {
             console.error("LOGOUT_API_ERROR:", error);
         } finally {
-            // 2. Limpieza TOTAL del estado de React
+            // Limpiamos caché y estado
+            queryClient.clear();
             setState({ user: null, twoFactorPending: false });
-            
-            // 3. Redirección forzada
             window.location.href = "/admin/login";
         }
     };
 
+    // TU LÓGICA DE SIEMPRE (No se toca)
     const isAuthenticated = !!state.user && !state.twoFactorPending;
 
     return (
@@ -73,7 +74,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-// Hook personalizado para usar el auth en cualquier parte
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) throw new Error("useAuth debe usarse dentro de un AuthProvider");
