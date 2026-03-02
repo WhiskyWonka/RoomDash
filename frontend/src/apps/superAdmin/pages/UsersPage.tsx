@@ -3,7 +3,7 @@ import { DeleteUserDialog } from '@/components/ui/8bit/blocks/users/DeleteUserDi
 import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
 import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
 import { Button } from '@/components/ui/8bit/button';
-import { usersApi } from '@/lib/api';
+import { usersApi } from '../services/usersApi';
 import { User } from '@/types/user';
 import { useEffect, useState } from "react";
 

@@ -12,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    // Redirigir si ya está autenticado
     if (isAuthenticated) {
         return <Navigate to="/admin/dashboard" replace />;
     }
@@ -19,28 +20,24 @@ export default function LoginPage() {
     const handleLogin = async (data: any) => {
         setError(null);
         try {
-            // CRÍTICO: Obtener cookie CSRF ANTES de hacer login
+            // 1. Handshake CSRF
             await authApi.csrf();
-            const response = await authApi.login(data);
 
+            // 2. Intento de login
+            const response = await authApi.login(data);
             const result = response.data;
 
-            if (result && result.twoFactorRequired) {
+            if (result?.twoFactorRequired) {
                 if (result.requiresSetup) {
-                    const setupResponse = await authApi.setup2FA();
-                    const setupData = setupResponse.data;
-
-                    setQrData({
-                        qrCode: setupData.qrCode,
-                        secret: setupData.secret
-                    });
+                    // 3. Setup de 2FA si es la primera vez
+                    const setupRes = await authApi.setup2FA();
+                    setQrData(setupRes.data);
                 } else {
                     setQrData(null);
                 }
-
                 setShow2FA(true);
-
             } else {
+                // 4. Login exitoso directo
                 await checkAuth();
                 navigate("/admin/dashboard", { replace: true });
             }
@@ -57,17 +54,15 @@ export default function LoginPage() {
             } else {
                 await authApi.verify2FA(code);
             }
-
-            console.log("2FA_VERIFIED_SUCCESSFULLY_WAITING_FOR_CONTEXT");
             
+            // Actualizamos el contexto global (limpia el flag twoFactorPending)
             await checkAuth(); 
-            
-            // Y navegamos al dashboard
             navigate("/admin/dashboard", { replace: true });
             
-        } catch (error: any) {
-            console.error("ERROR_2FA:", error);
-            alert("Código incorrecto");
+        } catch (err: any) {
+            console.error("ERROR_2FA:", err);
+            // Usamos el mensaje del backend para el error visual
+            setError(err.message || "Código incorrecto");
         }
     };
 

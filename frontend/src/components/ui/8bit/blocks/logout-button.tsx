@@ -1,17 +1,12 @@
-import { authApi } from "@/lib/authApi";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "../button";
 
 export function LogoutButton() {
+    const { logout } = useAuth();
+
     const handleLogout = async () => {
-        try {
-            // 1. Avisar al servidor
-            await authApi.logout();
-        } catch (error) {
-            console.error("Error al cerrar sesión en el servidor", error);
-        } finally {
-            // 2. Limpiar y redirigir (Forzamos recarga para limpiar todo el estado de React)
-            window.location.href = "/admin/login";
-        }
+        // El context ya se encarga del try/catch y de redirigir
+        await logout();
     };
 
     return (
