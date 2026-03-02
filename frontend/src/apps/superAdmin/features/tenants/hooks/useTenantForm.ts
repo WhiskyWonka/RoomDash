@@ -26,7 +26,6 @@ export function useTenantForm(
         defaultValues: { name: "", domain: "", isActive: true },
     });
 
-    // Sincronización al abrir el modal
     useEffect(() => {
         form.reset({
             name: tenant?.name ?? "",
@@ -42,5 +41,7 @@ export function useTenantForm(
     return {
         form,
         handleFormSubmit,
+        // Agregamos esto para la UI
+        isSubmitting: form.formState.isSubmitting 
     };
 }

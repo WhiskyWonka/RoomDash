@@ -1,33 +1,13 @@
-import { useEffect, useState } from "react";
-import { tenantsApi } from "../services/tenantsApi";
-import { TenantsCountWidget } from "@/components/ui/8bit/blocks/dashboard/TenantsCountWidget";
+import { TenantsCountWidget } from "@/apps/superAdmin/features/dashboard/components/TenantsCountWidget";
+import { AuditLogWidget } from "../features/dashboard/components/AuditLogWidget";
+import { useDashboardTenantsData } from "../../superAdmin/features/dashboard/hooks/useDashboardTenantsData";
 
 export default function DashboardPage() {
-    const [tenantsCount, setTenantsCount] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const { tenantsCount, loading, error } = useDashboardTenantsData();
 
-    useEffect(() => {
-        // Usamos una función asíncrona dentro del useEffect para mayor claridad
-        const fetchDashboardData = async () => {
-            try {
-                setLoading(true);
-                const response = await tenantsApi.list();
-                
-                // Con el interceptor, 'response' es el JSON { success, message, data }
-                // Y 'data' contiene la lista o el objeto con 'items'
-                const items = response.data?.items || response.data || [];
-                
-                setTenantsCount(items.length);
-            } catch (error) {
-                console.error("DASHBOARD_FETCH_ERROR:", error);
-                // Aquí podrías setear un error para mostrar un mensaje retro de "SYSTEM FAILURE"
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDashboardData();
-    }, []);
+    if (error) {
+        console.error("DASHBOARD_CRITICAL_FAILURE:", error);
+    }
 
     return (
         <div className="p-2">
@@ -40,7 +20,7 @@ export default function DashboardPage() {
                     loading={loading}
                 />
 
-                {/* Aquí podrías agregar más widgets como: RoomsCountWidget, RevenueWidget, etc. */}
+                <AuditLogWidget />
             </div>
         </div>
     );

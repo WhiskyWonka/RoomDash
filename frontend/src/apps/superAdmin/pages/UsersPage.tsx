@@ -1,114 +1,77 @@
 import { SectionHeader } from '@/components/ui/8bit/blocks/SectionHeader';
-import { DeleteUserDialog } from '@/components/ui/8bit/blocks/users/DeleteUserDialog';
-import { UserDialog } from '@/components/ui/8bit/blocks/users/UserDialog';
-import { UsersTable } from '@/components/ui/8bit/blocks/users/UserTable';
+import { DeleteUserDialog } from '@/apps/superAdmin/features/users/components/DeleteUserDialog';
+import { UserDialog } from '@/apps/superAdmin/features/users/components/UserDialog';
+import { UsersTable } from '@/apps/superAdmin/features/users/components/UserTable';
 import { Button } from '@/components/ui/8bit/button';
-import { usersApi } from '../services/usersApi';
-import { User } from '@/types/user';
-import { useEffect, useState } from "react";
+import { Alert } from "@/components/ui/8bit/alert";
 
-
+import { useUsers } from "../features/users/hooks/useUsers";
+import { useUserModals } from "../features/users/hooks/useUserModals";
 
 export default function UsersPage() {
-
-    const [users, setUsers] = useState<User[]>([]);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [editing, setEditing] = useState<User | null>(null);
-    const [deleting, setDeleting] = useState<User | null>(null);
-
-
-    const load = () => {
-        usersApi.list()
-            .then((response: any) => {
-                console.log("LOAD_USERS_RESPONSE:", response);
-                const usersArray = response.data?.items || [];
-                setUsers(usersArray);
-            })
-            .catch(err => {
-                console.error("LOAD_USERS_ERROR:", err);
-                setUsers([]);
-            });
-    };
-
-    useEffect(load, []);
-
-    const handleCreate = () => {
-        setEditing(null);
-        setDialogOpen(true);
-    };
-
-    const handleEdit = (t: User) => {
-        setEditing(t);
-        setDialogOpen(true);
-    };
-
-    const handleDelete = (t: User) => {
-        setDeleting(t);
-        setDeleteOpen(true);
-    };
+    const { users, loading, error, setError, createUser, updateUser, deleteUser } = useUsers();
+    const { modals, openCreate, openEdit, openDelete, closeModals } = useUserModals();
 
     const handleSubmit = async (firstName: string, lastName: string, username: string, email: string) => {
         const tempPassword = "RoomDash_Safe_2026_!@#!"; 
-        try {
-            if (editing) {
-                await usersApi.update(editing.id, { 
-                    first_name: firstName,
-                    last_name: lastName, 
-                    username, 
-                    email,
-                    password: tempPassword,
-                    password_confirmation: tempPassword
-                });
-            } else {
-                await usersApi.create({ 
-                    first_name: firstName,
-                    last_name: lastName, 
-                    username, 
-                    email,
-                    password: tempPassword,
-                    password_confirmation: tempPassword
-                });
-            }
-            setDialogOpen(false);
-            load();
-        } catch (error) {
-            console.error("CRITICAL_ERROR: API_REQUEST_FAILED", error);
-        }
-    };
+        const payload = { 
+            first_name: firstName,
+            last_name: lastName, 
+            username, 
+            email,
+            password: tempPassword,
+            password_confirmation: tempPassword
+        };
 
-    const handleConfirmDelete = async () => {
-        if (deleting) {
-            await usersApi.delete(deleting.id);
+        try {
+            if (modals.editing) {
+                await updateUser(modals.editing.id, payload);
+            } else {
+                await createUser(payload);
+            }
+            closeModals();
+        } catch (err) {
+            // Error manejado por el hook
         }
-        setDeleteOpen(false);
-        load();
     };
 
     return (
-        <div className="">
-            <SectionHeader action={<Button variant="outline" onClick={handleCreate}>[+] ADD_NEW_USER</Button>} />
+        <div className="space-y-4">
+            {error && (
+                <Alert variant="destructive" onClose={() => setError(null)}>
+                    [SYSTEM_FAILURE]: {error}
+                </Alert>
+            )}
+
+            <SectionHeader action={<Button variant="outline" onClick={openCreate}>[+] ADD_NEW_USER</Button>} />
             
-            <div className="">
+            {loading ? (
+                <div className="p-10 text-center animate-pulse">[LOADING_USER_GRID...]</div>
+            ) : (
                 <UsersTable
                     users={users}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
                 />
-            </div>
+            )}
 
-            {/* Diálogos de acción */}
             <UserDialog
-                open={dialogOpen}
-                user={editing}
-                onClose={() => setDialogOpen(false)}
+                open={modals.dialogOpen}
+                user={modals.editing}
+                onClose={closeModals}
                 onSubmit={handleSubmit}
             />
+
             <DeleteUserDialog
-                open={deleteOpen}
-                user={deleting}
-                onClose={() => setDeleteOpen(false)}
-                onConfirm={handleConfirmDelete}
+                open={modals.deleteOpen}
+                user={modals.deleting}
+                onClose={closeModals}
+                onConfirm={async () => {
+                    if (modals.deleting) {
+                        await deleteUser(modals.deleting.id);
+                        closeModals();
+                    }
+                }}
             />
         </div>
     );

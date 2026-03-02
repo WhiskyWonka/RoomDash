@@ -8,7 +8,6 @@ import { TenantTable } from "../features/tenants/components/TenantTable";
 import { TenantDialog } from "../features/tenants/components/TenantDialog";
 import { TenantAdminDialog } from "../features/tenants/components/TenantAdminDialog";
 import { DeleteTenantDialog } from "../features/tenants/components/DeleteTenantDialog";
-import { DeleteTenantAdminDialog } from "../features/tenants/components/DeleteTenantAdminDialog";
 
 import { Button } from "@/components/ui/8bit/button";
 import { Alert } from "@/components/ui/8bit/alert";
@@ -36,10 +35,17 @@ export default function TenantsPage() {
     }, [tenants, tab]);
 
     const handleSubmit = async (name: string, domain: string, isActive: boolean) => {
-        const success = modals.editing 
-            ? await updateTenant(modals.editing.id, { name, domain, isActive })
-            : await createTenant({ name, domain, isActive });
-        if (success) closeModals();
+        try {
+            if (modals.editing) {
+                await updateTenant(modals.editing.id, { name, domain, isActive });
+            } else {
+                await createTenant({ name, domain, isActive });
+            }
+            closeModals(); // Solo cerramos si no hubo error
+        } catch (err: any) {
+            // El error ya se setea en el hook, pero podés capturarlo acá si necesitás algo extra
+            console.error("SUBMIT_ERROR", err);
+        }
     };
 
     return (
@@ -97,17 +103,9 @@ export default function TenantsPage() {
                 tenant={modals.editing}
                 adminUser={adminLogic.currentAdmin}
                 onClose={() => adminLogic.setAdminOpen(false)}
-                onSubmit={adminLogic.handleSubmitAdmin}
+                onSubmit={async (data) => {await adminLogic.handleSubmitAdmin(data);}}
                 onDelete={adminLogic.currentAdmin ? adminLogic.handleDeleteAdmin : undefined}
                 onResendVerification={adminLogic.currentAdmin ? adminLogic.handleResendAdminVerification : undefined}
-            />
-
-            <DeleteTenantAdminDialog
-                open={adminLogic.deleteAdminOpen}
-                tenant={modals.editing}
-                adminUser={adminLogic.currentAdmin}
-                onClose={() => adminLogic.setDeleteAdminOpen(false)}
-                onConfirm={adminLogic.handleConfirmDeleteAdmin}
             />
         </div>
     );
